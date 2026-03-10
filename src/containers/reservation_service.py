@@ -7,8 +7,8 @@ Funcionalidades das reservas:
 """
 
 from datetime import date
-from pilatesflow.src.database import load_json, save_json, get_next_id
-from pilatesflow.src.components.student import can_reserve
+from src.database import load_json, save_json, get_next_id
+from src.components.student import can_reserve
 
 def list_available_classes():
     """Lista todas as aulas disponíveis, indicando vagas restantes e nome do instrutor."""
