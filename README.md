@@ -113,9 +113,7 @@ O sistema aplica algumas regras básicas:
 
 ## Autores
 
-Projeto académico desenvolvido para a unidade curricular de **Projeto de tecnologias e programação de sistemas de informação**.
-
-Projeto desenvolvido por:
+Projeto para a unidade curricular de **Projeto de tecnologias e programação de sistemas de informação** desenvolvido por:
 
 Bernardo Lagos @blagos1806
 
