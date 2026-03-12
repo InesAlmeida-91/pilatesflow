@@ -115,10 +115,10 @@ O sistema aplica algumas regras básicas:
 
 Projeto para a unidade curricular de **Projeto de tecnologias e programação de sistemas de informação** desenvolvido por:
 
-Bernardo Lagos @blagos1806
+Bernardo Lagos [@blagos1806](https://github.com/blagos1806)
 
-Guilherme Silva @guilhermesilva3692
+Guilherme Silva [@guilhermesilva3692](https://github.com/guilhermesilva3692)
 
-Inês Almeida
+Inês Almeida [@InesAlmeida-91](https://github.com/InesAlmeida-91)
 
 ---
