@@ -115,9 +115,9 @@ O sistema aplica algumas regras básicas:
 
 Projeto académico desenvolvido para a unidade curricular de **Projeto de tecnologias e programação de sistemas de informação**.
 
-Equipa de desenvolvimento:
+Projeto desenvolvido por:
 
-Bernardo Lagos
+Bernardo Lagos @blagos1806
 
 Guilherme Silva
 
