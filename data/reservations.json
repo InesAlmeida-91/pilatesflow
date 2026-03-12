@@ -5,5 +5,19 @@
     "class_id": 1,
     "created_at": "2026-03-04",
     "status": "cancelado"
+  },
+  {
+    "id": 2,
+    "student_id": 2,
+    "class_id": 3,
+    "created_at": "2026-03-12",
+    "status": "cancelado"
+  },
+  {
+    "id": 3,
+    "student_id": 2,
+    "class_id": 3,
+    "created_at": "2026-03-12",
+    "status": "confirmado"
   }
 ]

@@ -85,7 +85,7 @@ def reserve_class(student_id, class_id):
 
     # Cria nova reserva
     new_reservation = {
-        "id": get_next_id("reservations.json"),
+        "id": get_next_id(reservations),
         "student_id": student_id,
         "class_id": class_id,
         "created_at": str(date.today()),
