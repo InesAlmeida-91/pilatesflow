@@ -5,11 +5,11 @@ Sistema de gestão de estúdio de Pilates.
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from src.auth import login, register
-from src.containers.aulas_service import (
+from src.containers.class_service import (
     list_classes, create_class, edit_class, cancel_class,
     get_class_by_id, get_enrolled_students, search_reservations
 )
-from src.containers.reservas_service import (
+from src.containers.reservation_service import (
     list_available_classes, reserve_class, cancel_reservation,
     list_student_reservations
 )
@@ -180,8 +180,7 @@ def instructor_edit_class(class_id):
             valid, msg = validate_datetime(kwargs["schedule_date"], kwargs["schedule_time"])
             if not valid:
                 flash(msg, "error")
-                return render_template("instructor/edit_class.html",
-                                       class_data=class_data, user=session["user"])
+                return render_template("instructor/edit_class.html", class_data=class_data, user=session["user"])
 
         success, msg = edit_class(class_id, session["user"]["id"], **kwargs)
         flash(msg, "success" if success else "error")
@@ -193,8 +192,7 @@ def instructor_edit_class(class_id):
     class_data["schedule_date"] = schedule_parts[0] if len(schedule_parts) > 0 else ""
     class_data["schedule_time"] = schedule_parts[1] if len(schedule_parts) > 1 else ""
 
-    return render_template("instructor/edit_class.html",
-                           class_data=class_data, user=session["user"])
+    return render_template("instructor/edit_class.html", class_data=class_data, user=session["user"])
 
 
 @app.route("/instructor/classes/<int:class_id>/cancel", methods=["POST"])
@@ -214,8 +212,7 @@ def instructor_class_students(class_id):
         return redirect(url_for("instructor_list_classes"))
 
     students = get_enrolled_students(class_id)
-    return render_template("instructor/class_students.html",
-                           class_data=class_data, students=students, user=session["user"])
+    return render_template("instructor/class_students.html", class_data=class_data, students=students, user=session["user"])
 
 
 @app.route("/instructor/search", methods=["GET", "POST"])
@@ -230,8 +227,7 @@ def instructor_search():
         else:
             flash("Introduza um termo de pesquisa.", "error")
 
-    return render_template("instructor/search.html",
-                           results=results, query=query, user=session["user"])
+    return render_template("instructor/search.html", results=results, query=query, user=session["user"])
 
 
 # ═══════════════════════════════════════
@@ -248,8 +244,7 @@ def student_dashboard():
 @student_required
 def student_available_classes():
     classes = list_available_classes()
-    return render_template("student/available_classes.html",
-                           classes=classes, user=session["user"])
+    return render_template("student/available_classes.html", classes=classes, user=session["user"])
 
 
 @app.route("/student/reserve/<int:class_id>", methods=["POST"])
@@ -264,8 +259,7 @@ def student_reserve(class_id):
 @student_required
 def student_reservations():
     reservations = list_student_reservations(session["user"]["id"])
-    return render_template("student/reservations.html",
-                           reservations=reservations, user=session["user"])
+    return render_template("student/reservations.html", reservations=reservations, user=session["user"])
 
 
 @app.route("/student/reservations/<int:reservation_id>/cancel", methods=["POST"])

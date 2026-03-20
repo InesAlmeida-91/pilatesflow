@@ -116,11 +116,11 @@ def cancel_class(class_id, instructor_id):
     cancelled_class["status"] = "cancelado"
     save_json("classes.json", classes)
 
-    reservations = load_json("reservas.json")
+    reservations = load_json("reservations.json")
     for r in reservations:
         if r["class_id"] == class_id and r["status"] == "confirmado":
             r["status"] = "cancelado"
-    save_json("reservas.json", reservations)
+    save_json("reservations.json", reservations)
 
     return True, f"Aula '{cancelled_class['name']}' cancelada com sucesso."
 
