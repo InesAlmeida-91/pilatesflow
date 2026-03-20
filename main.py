@@ -1,373 +1,281 @@
 """
-Sistema de teste das funcionalidades do PilatesFlow
-Menu interativo para testar operações de aulas e reservas no terminal
+main.py - Ponto de entrada da aplicação Flask.
+Sistema de gestão de estúdio de Pilates.
 """
 
-from src.containers.class_service import (
-    create_class, list_classes, edit_class, cancel_class, 
-    get_class_by_id, get_enrolled_students
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from src.auth import login, register
+from src.containers.aulas_service import (
+    list_classes, create_class, edit_class, cancel_class,
+    get_class_by_id, get_enrolled_students, search_reservations
 )
-from src.containers.reservation_service import (
-    list_available_classes, list_student_reservations, 
-    reserve_class, cancel_reservation
+from src.containers.reservas_service import (
+    list_available_classes, reserve_class, cancel_reservation,
+    list_student_reservations
 )
-from src.database import load_json, save_json
+from src.utils import validate_datetime
 
-# Utilizadores de teste
-TEST_INSTRUCTOR_ID = 1
-TEST_STUDENT_ID = 2
-TEST_INSTRUCTOR_NAME = "Instrutor 1"
-TEST_STUDENT_NAME = "Aluno 1"
+app = Flask(__name__)
+app.secret_key = "pilates_studio_secret_key_2025"
 
 
-def print_menu(user_type=None):
-    """Exibe o menu principal ou menu do utilizador autenticado."""
-    print("\n" + "="*50)
-    print("🧘 BEM-VINDO AO PILATESFLOW - MENU DE TESTES".center(50))
-    print("="*50 + "\n")
-    
-    if not user_type:
-        print("1. Aceder como Instrutor")
-        print("2. Aceder como Aluno")
-        print("0. Sair")
-    elif user_type == "INSTRUCTOR":
-        print(f"👨‍🏫 Utilizador: {TEST_INSTRUCTOR_NAME}\n")
-        print("--- GESTÃO DE AULAS ---")
-        print("1. Criar aula")
-        print("2. Listar minhas aulas")
-        print("3. Editar aula")
-        print("4. Cancelar aula")
-        print("5. Ver alunos inscritos numa aula")
-        print("0. Sair")
-    elif user_type == "STUDENT":
-        print(f"👩‍🎓 Utilizador: {TEST_STUDENT_NAME}\n")
-        print("--- RESERVAS ---")
-        print("1. Listar aulas disponíveis")
-        print("2. Reservar aula")
-        print("3. Minhas reservas")
-        print("4. Cancelar reserva")
-        print("0. Sair")
-    
-    print()
+# ─── Decorador para verificar login ───
+def login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "user" not in session:
+            flash("Por favor, faça login primeiro.", "error")
+            return redirect(url_for("login_page"))
+        return f(*args, **kwargs)
+    return decorated
 
 
-def test_instrutor():
-    """Menu para testar funcionalidades de instrutor."""
-    while True:
-        print_menu("INSTRUCTOR")
-        opcao = input("Escolha uma opção: ").strip()
-        
-        if opcao == "1":
-            criar_aula()
-        elif opcao == "2":
-            listar_minhas_aulas()
-        elif opcao == "3":
-            editar_aula()
-        elif opcao == "4":
-            cancelar_aula()
-        elif opcao == "5":
-            ver_alunos_inscritos()
-        elif opcao == "0":
-            print("\nEncerrando...")
-            break
+def instructor_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "user" not in session or session["user"]["type"] != "INSTRUCTOR":
+            flash("Acesso restrito a instrutores.", "error")
+            return redirect(url_for("login_page"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def student_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "user" not in session or session["user"]["type"] != "STUDENT":
+            flash("Acesso restrito a alunos.", "error")
+            return redirect(url_for("login_page"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ═══════════════════════════════════════
+#  ROTAS PÚBLICAS
+# ═══════════════════════════════════════
+
+@app.route("/")
+def index():
+    if "user" in session:
+        if session["user"]["type"] == "INSTRUCTOR":
+            return redirect(url_for("instructor_dashboard"))
+        return redirect(url_for("student_dashboard"))
+    return redirect(url_for("login_page"))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login_page():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+
+        user = login(email, password)
+        if user:
+            session["user"] = user
+            flash(f"Bem-vindo(a), {user['name']}!", "success")
+            if user["type"] == "INSTRUCTOR":
+                return redirect(url_for("instructor_dashboard"))
+            return redirect(url_for("student_dashboard"))
         else:
-            print("❌ Opção inválida!")
+            flash("Credenciais inválidas. Verifique o e-mail e a password.", "error")
+
+    return render_template("login.html")
 
 
-def test_aluno():
-    """Menu para testar funcionalidades de aluno."""
-    while True:
-        print_menu("STUDENT")
-        opcao = input("Escolha uma opção: ").strip()
-        
-        if opcao == "1":
-            listar_aulas_disponiveis()
-        elif opcao == "2":
-            reservar_aula()
-        elif opcao == "3":
-            listar_minhas_reservas()
-        elif opcao == "4":
-            cancelar_reserva()
-        elif opcao == "0":
-            print("\nEncerrando...")
-            break
+@app.route("/register", methods=["GET", "POST"])
+def register_page():
+    if request.method == "POST":
+        name = request.form.get("name", "")
+        email = request.form.get("email", "")
+        password = request.form.get("password", "")
+
+        success, msg = register(name, email, password)
+        if success:
+            flash(msg, "success")
+            return redirect(url_for("login_page"))
         else:
-            print("❌ Opção inválida!")
+            flash(msg, "error")
+
+    return render_template("register.html")
 
 
-# ============ FUNCIONALIDADES DO INSTRUTOR ============
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    flash("Sessão terminada com sucesso.", "success")
+    return redirect(url_for("login_page"))
 
-def criar_aula():
-    """Cria uma nova aula."""
-    print("\n📝 CRIAR AULA")
-    print("-" * 40)
-    
-    nome = input("Nome da aula: ").strip()
-    if not nome:
-        print("❌ Nome não pode estar vazio!")
-        return
-    
-    data = input("Data (YYYY-MM-DD): ").strip()
-    hora = input("Hora (HH:MM): ").strip()
-    duracao = input("Duração (minutos): ").strip()
-    descricao = input("Descrição: ").strip()
-    max_alunos = input("Máximo de alunos: ").strip()
-    
-    try:
-        sucesso, mensagem = create_class(
-            nome, data, hora, duracao, descricao, max_alunos, TEST_INSTRUCTOR_ID
+
+# ═══════════════════════════════════════
+#  ROTAS DO INSTRUTOR
+# ═══════════════════════════════════════
+
+@app.route("/instructor")
+@instructor_required
+def instructor_dashboard():
+    return render_template("instructor/dashboard.html", user=session["user"])
+
+
+@app.route("/instructor/classes")
+@instructor_required
+def instructor_list_classes():
+    classes = list_classes(instructor_id=session["user"]["id"])
+    return render_template("instructor/list_classes.html", classes=classes, user=session["user"])
+
+
+@app.route("/instructor/classes/create", methods=["GET", "POST"])
+@instructor_required
+def instructor_create_class():
+    if request.method == "POST":
+        name = request.form.get("name", "")
+        schedule_date = request.form.get("schedule_date", "")
+        schedule_time = request.form.get("schedule_time", "")
+        duration = request.form.get("duration", "60")
+        description = request.form.get("description", "")
+        max_students = request.form.get("max_students", "10")
+
+        valid, msg = validate_datetime(schedule_date, schedule_time)
+        if not valid:
+            flash(msg, "error")
+            return render_template("instructor/create_class.html", user=session["user"])
+
+        if not name.strip():
+            flash("O nome da aula não pode estar vazio.", "error")
+            return render_template("instructor/create_class.html", user=session["user"])
+
+        success, msg = create_class(
+            name, schedule_date, schedule_time,
+            duration, description, max_students,
+            session["user"]["id"]
         )
-        if sucesso:
-            print(f"✅ {mensagem}")
+        flash(msg, "success" if success else "error")
+        if success:
+            return redirect(url_for("instructor_list_classes"))
+
+    return render_template("instructor/create_class.html", user=session["user"])
+
+
+@app.route("/instructor/classes/<int:class_id>/edit", methods=["GET", "POST"])
+@instructor_required
+def instructor_edit_class(class_id):
+    class_data = get_class_by_id(class_id)
+    if not class_data:
+        flash("Aula não encontrada.", "error")
+        return redirect(url_for("instructor_list_classes"))
+
+    if request.method == "POST":
+        kwargs = {
+            "name": request.form.get("name", ""),
+            "schedule_date": request.form.get("schedule_date", ""),
+            "schedule_time": request.form.get("schedule_time", ""),
+            "duration": request.form.get("duration", ""),
+            "description": request.form.get("description", ""),
+            "max_students": request.form.get("max_students", ""),
+        }
+
+        if kwargs["schedule_date"] and kwargs["schedule_time"]:
+            valid, msg = validate_datetime(kwargs["schedule_date"], kwargs["schedule_time"])
+            if not valid:
+                flash(msg, "error")
+                return render_template("instructor/edit_class.html",
+                                       class_data=class_data, user=session["user"])
+
+        success, msg = edit_class(class_id, session["user"]["id"], **kwargs)
+        flash(msg, "success" if success else "error")
+        if success:
+            return redirect(url_for("instructor_list_classes"))
+
+    # Separar schedule em data e hora para o formulário
+    schedule_parts = class_data.get("schedule", " ").split(" ")
+    class_data["schedule_date"] = schedule_parts[0] if len(schedule_parts) > 0 else ""
+    class_data["schedule_time"] = schedule_parts[1] if len(schedule_parts) > 1 else ""
+
+    return render_template("instructor/edit_class.html",
+                           class_data=class_data, user=session["user"])
+
+
+@app.route("/instructor/classes/<int:class_id>/cancel", methods=["POST"])
+@instructor_required
+def instructor_cancel_class(class_id):
+    success, msg = cancel_class(class_id, session["user"]["id"])
+    flash(msg, "success" if success else "error")
+    return redirect(url_for("instructor_list_classes"))
+
+
+@app.route("/instructor/classes/<int:class_id>/students")
+@instructor_required
+def instructor_class_students(class_id):
+    class_data = get_class_by_id(class_id)
+    if not class_data:
+        flash("Aula não encontrada.", "error")
+        return redirect(url_for("instructor_list_classes"))
+
+    students = get_enrolled_students(class_id)
+    return render_template("instructor/class_students.html",
+                           class_data=class_data, students=students, user=session["user"])
+
+
+@app.route("/instructor/search", methods=["GET", "POST"])
+@instructor_required
+def instructor_search():
+    results = []
+    query = ""
+    if request.method == "POST":
+        query = request.form.get("query", "")
+        if query.strip():
+            results = search_reservations(query)
         else:
-            print(f"❌ {mensagem}")
-    except Exception as e:
-        print(f"❌ Erro ao criar aula: {e}")
+            flash("Introduza um termo de pesquisa.", "error")
+
+    return render_template("instructor/search.html",
+                           results=results, query=query, user=session["user"])
 
 
-def listar_minhas_aulas():
-    """Lista todas as aulas do instrutor."""
-    print("\n📋 MINHAS AULAS")
-    print("-" * 40)
-    
-    aulas = list_classes(TEST_INSTRUCTOR_ID)
-    
-    if not aulas:
-        print("Nenhuma aula registada.")
-        return
-    
-    for aula in aulas:
-        status_emoji = "✅" if aula["status"] == "confirmado" else "❌"
-        print(f"\n{status_emoji} ID: {aula['id']}")
-        print(f"   Nome: {aula['name']}")
-        print(f"   Horário: {aula['schedule']}")
-        print(f"   Duração: {aula['duration']} min")
-        print(f"   Vagas: {aula['max_students']}")
-        print(f"   Descrição: {aula.get('description', 'N/A')}")
-        print(f"   Status: {aula['status']}")
+# ═══════════════════════════════════════
+#  ROTAS DO ALUNO
+# ═══════════════════════════════════════
+
+@app.route("/student")
+@student_required
+def student_dashboard():
+    return render_template("student/dashboard.html", user=session["user"])
 
 
-def editar_aula():
-    """Edita uma aula existente."""
-    print("\n✏️  EDITAR AULA")
-    print("-" * 40)
-    
-    listar_minhas_aulas()
-    
-    try:
-        class_id = int(input("\nID da aula a editar: ").strip())
-    except ValueError:
-        print("❌ ID inválido!")
-        return
-    
-    aula = get_class_by_id(class_id)
-    if not aula:
-        print("❌ Aula não encontrada!")
-        return
-    
-    if aula["instructor_id"] != TEST_INSTRUCTOR_ID:
-        print("❌ Você não tem permissão para editar esta aula!")
-        return
-    
-    print("\nDeixe em branco para não alterar:")
-    nome = input("Novo nome: ").strip()
-    data = input("Nova data (YYYY-MM-DD): ").strip()
-    hora = input("Nova hora (HH:MM): ").strip()
-    duracao = input("Nova duração (minutos): ").strip()
-    descricao = input("Nova descrição: ").strip()
-    max_alunos = input("Novo máximo de alunos: ").strip()
-    
-    kwargs = {}
-    if nome:
-        kwargs["name"] = nome
-    if data:
-        kwargs["schedule_date"] = data
-    if hora:
-        kwargs["schedule_time"] = hora
-    if duracao:
-        kwargs["duration"] = int(duracao)
-    if descricao:
-        kwargs["description"] = descricao
-    if max_alunos:
-        kwargs["max_students"] = int(max_alunos)
-    
-    try:
-        sucesso, mensagem = edit_class(class_id, TEST_INSTRUCTOR_ID, **kwargs)
-        if sucesso:
-            print(f"✅ {mensagem}")
-        else:
-            print(f"❌ {mensagem}")
-    except Exception as e:
-        print(f"❌ Erro ao editar aula: {e}")
+@app.route("/student/classes")
+@student_required
+def student_available_classes():
+    classes = list_available_classes()
+    return render_template("student/available_classes.html",
+                           classes=classes, user=session["user"])
 
 
-def cancelar_aula():
-    """Cancela uma aula."""
-    print("\n❌ CANCELAR AULA")
-    print("-" * 40)
-    
-    listar_minhas_aulas()
-    
-    try:
-        class_id = int(input("\nID da aula a cancelar: ").strip())
-    except ValueError:
-        print("❌ ID inválido!")
-        return
-    
-    confirma = input("Tem certeza? (S/N): ").strip().upper()
-    if confirma != "S":
-        print("Operação cancelada.")
-        return
-    
-    try:
-        sucesso, mensagem = cancel_class(class_id, TEST_INSTRUCTOR_ID)
-        if sucesso:
-            print(f"✅ {mensagem}")
-        else:
-            print(f"❌ {mensagem}")
-    except Exception as e:
-        print(f"❌ Erro ao cancelar aula: {e}")
+@app.route("/student/reserve/<int:class_id>", methods=["POST"])
+@student_required
+def student_reserve(class_id):
+    success, msg = reserve_class(session["user"]["id"], class_id)
+    flash(msg, "success" if success else "error")
+    return redirect(url_for("student_available_classes"))
 
 
-def ver_alunos_inscritos():
-    """Mostra os alunos inscritos numa aula."""
-    print("\n👥 ALUNOS INSCRITOS")
-    print("-" * 40)
-    
-    listar_minhas_aulas()
-    
-    try:
-        class_id = int(input("\nID da aula: ").strip())
-    except ValueError:
-        print("❌ ID inválido!")
-        return
-    
-    alunos = get_enrolled_students(class_id)
-    
-    if not alunos:
-        print("Nenhum aluno inscrito nesta aula.")
-        return
-    
-    print(f"\nTotal: {len(alunos)} aluno(s)\n")
-    for aluno in alunos:
-        print(f"• {aluno['name']}")
-        print(f"  Email: {aluno['email']}")
-        print(f"  Inscrito em: {aluno['reservation_date']}\n")
+@app.route("/student/reservations")
+@student_required
+def student_reservations():
+    reservations = list_student_reservations(session["user"]["id"])
+    return render_template("student/reservations.html",
+                           reservations=reservations, user=session["user"])
 
 
-# ============ FUNCIONALIDADES DO ALUNO ============
-
-def listar_aulas_disponiveis():
-    """Lista todas as aulas disponíveis."""
-    print("\n📚 AULAS DISPONÍVEIS")
-    print("-" * 40)
-    
-    aulas = list_available_classes()
-    
-    if not aulas:
-        print("Nenhuma aula disponível.")
-        return
-    
-    for aula in aulas:
-        print(f"\n📅 ID: {aula['id']}")
-        print(f"   Nome: {aula['name']}")
-        print(f"   Instrutor: {aula['instructor_name']}")
-        print(f"   Horário: {aula['schedule']}")
-        print(f"   Duração: {aula['duration']} min")
-        print(f"   Vagas disponíveis: {aula['spots_left']}/{aula['max_students']}")
-        print(f"   Descrição: {aula.get('description', 'N/A')}")
+@app.route("/student/reservations/<int:reservation_id>/cancel", methods=["POST"])
+@student_required
+def student_cancel_reservation(reservation_id):
+    success, msg = cancel_reservation(reservation_id, session["user"]["id"])
+    flash(msg, "success" if success else "error")
+    return redirect(url_for("student_reservations"))
 
 
-def reservar_aula():
-    """Reserva uma aula."""
-    print("\n🎫 RESERVAR AULA")
-    print("-" * 40)
-    
-    listar_aulas_disponiveis()
-    
-    try:
-        class_id = int(input("\nID da aula a reservar: ").strip())
-    except ValueError:
-        print("❌ ID inválido!")
-        return
-    
-    try:
-        sucesso, mensagem = reserve_class(TEST_STUDENT_ID, class_id)
-        if sucesso:
-            print(f"✅ {mensagem}")
-        else:
-            print(f"❌ {mensagem}")
-    except Exception as e:
-        print(f"❌ Erro ao fazer reserva: {e}")
-
-
-def listar_minhas_reservas():
-    """Lista as reservas do aluno."""
-    print("\n📋 MINHAS RESERVAS")
-    print("-" * 40)
-    
-    reservas = list_student_reservations(TEST_STUDENT_ID)
-    
-    if not reservas:
-        print("Nenhuma reserva ativa.")
-        return
-    
-    for reserva in reservas:
-        print(f"\n✅ ID: {reserva['reservation_id']}")
-        print(f"   Aula: {reserva['class_name']}")
-        print(f"   Horário: {reserva['schedule']}")
-        print(f"   Duração: {reserva['duration']} min")
-        print(f"   Reservado em: {reserva['reserved_at']}")
-
-
-def cancelar_reserva():
-    """Cancela uma reserva."""
-    print("\n❌ CANCELAR RESERVA")
-    print("-" * 40)
-    
-    listar_minhas_reservas()
-    
-    try:
-        reserva_id = int(input("\nID da reserva a cancelar: ").strip())
-    except ValueError:
-        print("❌ ID inválido!")
-        return
-    
-    confirma = input("Tem certeza? (S/N): ").strip().upper()
-    if confirma != "S":
-        print("Operação cancelada.")
-        return
-    
-    try:
-        sucesso, mensagem = cancel_reservation(reserva_id, TEST_STUDENT_ID)
-        if sucesso:
-            print(f"✅ {mensagem}")
-        else:
-            print(f"❌ {mensagem}")
-    except Exception as e:
-        print(f"❌ Erro ao cancelar reserva: {e}")
-
-
-# ============ MENU PRINCIPAL ============
-
-def main():
-    """Menu principal de autenticação."""
-    while True:
-        print_menu()
-        opcao = input("Escolha uma opção: ").strip()
-        
-        if opcao == "1":
-            print(f"\n✅ Acedido como {TEST_INSTRUCTOR_NAME} (Instrutor)")
-            test_instrutor()
-        elif opcao == "2":
-            print(f"\n✅ Acedido como {TEST_STUDENT_NAME} (Aluno)")
-            test_aluno()
-        elif opcao == "0":
-            print("\n👋 Até à próxima!")
-            break
-        else:
-            print("❌ Opção inválida!")
-
-
+# ═══════════════════════════════════════
 if __name__ == "__main__":
-    main()
+    app.run(debug=True, port=5000)
