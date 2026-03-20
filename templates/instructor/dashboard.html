@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Instrutor{% endblock %}
+
+{% block content %}
+<h1>Dashboard do Instrutor</h1>
+<p>Bem-vindo(a), <strong>{{ user.name }}</strong>!</p>
+
+<div class="dashboard-grid">
+    <a href="{{ url_for('instructor_list_classes') }}" class="dashboard-card">
+        <div class="icon">📋</div>
+        <h3>Listar Aulas</h3>
+        <p>Ver todas as suas aulas registadas</p>
+    </a>
+    <a href="{{ url_for('instructor_create_class') }}" class="dashboard-card">
+        <div class="icon">➕</div>
+        <h3>Criar Aula</h3>
+        <p>Adicionar uma nova aula ao calendário</p>
+    </a>
+    <a href="{{ url_for('instructor_search') }}" class="dashboard-card">
+        <div class="icon">🔍</div>
+        <h3>Pesquisar Reservas</h3>
+        <p>Pesquisar por nome ou contacto de aluno</p>
+    </a>
+</div>
+{% endblock %}

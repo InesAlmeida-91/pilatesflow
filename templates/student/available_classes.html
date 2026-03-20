@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Aulas Disponíveis{% endblock %}
+
+{% block content %}
+<h1>Aulas Disponíveis</h1>
+
+{% if classes %}
+<table>
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Instrutor</th>
+            <th>Data/Hora</th>
+            <th>Duração</th>
+            <th>Vagas</th>
+            <th>Descrição</th>
+            <th>Ação</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in classes %}
+        <tr>
+            <td>{{ c.name }}</td>
+            <td>{{ c.instructor_name }}</td>
+            <td>{{ c.schedule }}</td>
+            <td>{{ c.duration }} min</td>
+            <td>{{ c.spots_left }}/{{ c.max_students }}</td>
+            <td>{{ c.description if c.description else '—' }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('student_reserve', class_id=c.id) }}" class="inline-form">
+                    <button type="submit" class="btn btn-success" style="padding:6px 14px; font-size:0.85em;">Reservar</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="card">
+    <p>Não há aulas disponíveis de momento.</p>
+</div>
+{% endif %}
+{% endblock %}

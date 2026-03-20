@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Alunos Inscritos{% endblock %}
+
+{% block content %}
+<h1>Alunos Inscritos: {{ class_data.name }}</h1>
+<p><strong>Horário:</strong> {{ class_data.schedule }} | <strong>Máx. Alunos:</strong> {{ class_data.max_students }} | <strong>Inscritos:</strong> {{ students|length }}</p>
+
+{% if students %}
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Data da Reserva</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in students %}
+        <tr>
+            <td>{{ s.id }}</td>
+            <td>{{ s.name }}</td>
+            <td>{{ s.email }}</td>
+            <td>{{ s.reservation_date }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="card">
+    <p>Nenhum aluno inscrito nesta aula.</p>
+</div>
+{% endif %}
+
+<a href="{{ url_for('instructor_list_classes') }}" class="btn btn-secondary" style="margin-top:20px;">← Voltar às Aulas</a>
+{% endblock %}

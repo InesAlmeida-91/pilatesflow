@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Criar Aula{% endblock %}
+
+{% block content %}
+<h1>Criar Nova Aula</h1>
+<div class="card">
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Nome da Aula</label>
+            <input type="text" id="name" name="name" required placeholder="Ex: Pilates Iniciante">
+        </div>
+        <div class="info-row">
+            <div class="form-group">
+                <label for="schedule_date">Data (DD/MM/AAAA)</label>
+                <input type="text" id="schedule_date" name="schedule_date" required placeholder="25/03/2025">
+            </div>
+            <div class="form-group">
+                <label for="schedule_time">Hora (HH:MM)</label>
+                <input type="text" id="schedule_time" name="schedule_time" required placeholder="10:00">
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="form-group">
+                <label for="duration">Duração (minutos)</label>
+                <input type="number" id="duration" name="duration" value="60" min="15" max="180">
+            </div>
+            <div class="form-group">
+                <label for="max_students">Máximo de Alunos</label>
+                <input type="number" id="max_students" name="max_students" value="10" min="1" max="50">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="description">Descrição (opcional)</label>
+            <textarea id="description" name="description" rows="3" placeholder="Breve descrição da aula..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Criar Aula</button>
+        <a href="{{ url_for('instructor_list_classes') }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

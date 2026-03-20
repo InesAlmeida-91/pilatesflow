@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Aluno{% endblock %}
+
+{% block content %}
+<h1>Dashboard do Aluno</h1>
+<p>Bem-vindo(a), <strong>{{ user.name }}</strong>!</p>
+
+<div class="dashboard-grid">
+    <a href="{{ url_for('student_available_classes') }}" class="dashboard-card">
+        <div class="icon">📋</div>
+        <h3>Aulas Disponíveis</h3>
+        <p>Ver aulas com vagas e fazer reserva</p>
+    </a>
+    <a href="{{ url_for('student_reservations') }}" class="dashboard-card">
+        <div class="icon">🎫</div>
+        <h3>Minhas Reservas</h3>
+        <p>Consultar e gerir as suas reservas</p>
+    </a>
+</div>
+{% endblock %}

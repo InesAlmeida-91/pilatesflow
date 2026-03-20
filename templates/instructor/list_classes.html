@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Minhas Aulas{% endblock %}
+
+{% block content %}
+<h1>Minhas Aulas</h1>
+<a href="{{ url_for('instructor_create_class') }}" class="btn btn-success" style="margin-bottom:20px;">➕ Criar Nova Aula</a>
+
+{% if classes %}
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Data/Hora</th>
+            <th>Duração</th>
+            <th>Máx. Alunos</th>
+            <th>Estado</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in classes %}
+        <tr>
+            <td>{{ c.id }}</td>
+            <td>{{ c.name }}</td>
+            <td>{{ c.schedule }}</td>
+            <td>{{ c.duration }} min</td>
+            <td>{{ c.max_students }}</td>
+            <td>
+                {% if c.status == 'confirmado' %}
+                    <span class="badge badge-success">Confirmado</span>
+                {% else %}
+                    <span class="badge badge-danger">Cancelado</span>
+                {% endif %}
+            </td>
+            <td>
+                <div class="actions">
+                    <a href="{{ url_for('instructor_class_students', class_id=c.id) }}" class="btn btn-primary" style="padding:6px 12px; font-size:0.85em;">👥 Alunos</a>
+                    {% if c.status == 'confirmado' %}
+                        <a href="{{ url_for('instructor_edit_class', class_id=c.id) }}" class="btn btn-secondary" style="padding:6px 12px; font-size:0.85em;">✏️ Editar</a>
+                        <form method="POST" action="{{ url_for('instructor_cancel_class', class_id=c.id) }}" class="inline-form" onsubmit="return confirm('Tem a certeza que deseja cancelar esta aula?');">
+                            <button type="submit" class="btn btn-danger" style="padding:6px 12px; font-size:0.85em;">❌ Cancelar</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="card">
+    <p>Ainda não tem aulas registadas. <a href="{{ url_for('instructor_create_class') }}">Crie a primeira aula!</a></p>
+</div>
+{% endif %}
+{% endblock %}

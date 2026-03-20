@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Pesquisar Reservas{% endblock %}
+
+{% block content %}
+<h1>Pesquisar Reservas</h1>
+<div class="card">
+    <form method="POST">
+        <div class="form-group">
+            <label for="query">Pesquisar por nome ou e-mail do aluno</label>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="query" name="query" value="{{ query }}" placeholder="Nome ou e-mail do aluno...">
+                <button type="submit" class="btn btn-primary">🔍 Pesquisar</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if results %}
+<table>
+    <thead>
+        <tr>
+            <th>Reserva ID</th>
+            <th>Aluno</th>
+            <th>E-mail</th>
+            <th>Aula</th>
+            <th>Horário</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in results %}
+        <tr>
+            <td>{{ r.reservation_id }}</td>
+            <td>{{ r.student_name }}</td>
+            <td>{{ r.student_email }}</td>
+            <td>{{ r.class_name }}</td>
+            <td>{{ r.class_schedule }}</td>
+            <td>
+                {% if r.status == 'confirmado' %}
+                    <span class="badge badge-success">Confirmado</span>
+                {% else %}
+                    <span class="badge badge-danger">Cancelado</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% elif query %}
+<div class="card">
+    <p>Nenhum resultado encontrado para "<strong>{{ query }}</strong>".</p>
+</div>
+{% endif %}
+{% endblock %}

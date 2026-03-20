@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Login - Estúdio Pilates{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <h1>🧘 Login</h1>
+    <form method="POST">
+        <div class="form-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" required placeholder="seu@email.com">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="Introduza a password">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Entrar</button>
+    </form>
+    <div class="auth-link">
+        <p>Não tem conta? <a href="{{ url_for('register_page') }}">Registar como aluno</a></p>
+    </div>
+</div>
+{% endblock %}

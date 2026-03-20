@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Minhas Reservas{% endblock %}
+
+{% block content %}
+<h1>Minhas Reservas</h1>
+
+{% if reservations %}
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Aula</th>
+            <th>Data/Hora</th>
+            <th>Duração</th>
+            <th>Estado</th>
+            <th>Reservado em</th>
+            <th>Ação</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in reservations %}
+        <tr>
+            <td>{{ r.reservation_id }}</td>
+            <td>{{ r.class_name }}</td>
+            <td>{{ r.schedule }}</td>
+            <td>{{ r.duration }} min</td>
+            <td><span class="badge badge-success">{{ r.status }}</span></td>
+            <td>{{ r.reserved_at }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('student_cancel_reservation', reservation_id=r.reservation_id) }}" class="inline-form" onsubmit="return confirm('Tem a certeza que deseja cancelar esta reserva?');">
+                    <button type="submit" class="btn btn-danger" style="padding:6px 14px; font-size:0.85em;">Cancelar</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="card">
+    <p>Ainda não tem reservas. <a href="{{ url_for('student_available_classes') }}">Veja as aulas disponíveis!</a></p>
+</div>
+{% endif %}
+{% endblock %}
