@@ -68,6 +68,7 @@ def index():
 
 @app.route("/login", methods=["GET", "POST"])
 def login_page():
+    email = ""
     if request.method == "POST":
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "")
@@ -82,11 +83,13 @@ def login_page():
         else:
             flash("Credenciais inválidas. Verifique o e-mail e a password.", "error")
 
-    return render_template("login.html")
+    return render_template("login.html", email=email)
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register_page():
+    name = ""
+    email = ""
     if request.method == "POST":
         name = request.form.get("name", "")
         email = request.form.get("email", "")
@@ -99,7 +102,7 @@ def register_page():
         else:
             flash(msg, "error")
 
-    return render_template("register.html")
+    return render_template("register.html", name=name, email=email)
 
 
 @app.route("/logout")
@@ -129,33 +132,36 @@ def instructor_list_classes():
 @app.route("/instructor/classes/create", methods=["GET", "POST"])
 @instructor_required
 def instructor_create_class():
+    form_data = {}
     if request.method == "POST":
-        name = request.form.get("name", "")
-        schedule_date = request.form.get("schedule_date", "")
-        schedule_time = request.form.get("schedule_time", "")
-        duration = request.form.get("duration", "60")
-        description = request.form.get("description", "")
-        max_students = request.form.get("max_students", "10")
+        form_data = {
+            "name": request.form.get("name", ""),
+            "schedule_date": request.form.get("schedule_date", ""),
+            "schedule_time": request.form.get("schedule_time", ""),
+            "duration": request.form.get("duration", "60"),
+            "description": request.form.get("description", ""),
+            "max_students": request.form.get("max_students", "10"),
+        }
 
-        valid, msg = validate_datetime(schedule_date, schedule_time)
+        valid, msg = validate_datetime(form_data["schedule_date"], form_data["schedule_time"])
         if not valid:
             flash(msg, "error")
-            return render_template("instructor/create_class.html", user=session["user"])
+            return render_template("instructor/create_class.html", user=session["user"], form_data=form_data)
 
-        if not name.strip():
+        if not form_data["name"].strip():
             flash("O nome da aula não pode estar vazio.", "error")
-            return render_template("instructor/create_class.html", user=session["user"])
+            return render_template("instructor/create_class.html", user=session["user"], form_data=form_data)
 
         success, msg = create_class(
-            name, schedule_date, schedule_time,
-            duration, description, max_students,
+            form_data["name"], form_data["schedule_date"], form_data["schedule_time"],
+            form_data["duration"], form_data["description"], form_data["max_students"],
             session["user"]["id"]
         )
         flash(msg, "success" if success else "error")
         if success:
             return redirect(url_for("instructor_list_classes"))
 
-    return render_template("instructor/create_class.html", user=session["user"])
+    return render_template("instructor/create_class.html", user=session["user"], form_data=form_data)
 
 
 @app.route("/instructor/classes/<int:class_id>/edit", methods=["GET", "POST"])
@@ -175,6 +181,7 @@ def instructor_edit_class(class_id):
             "description": request.form.get("description", ""),
             "max_students": request.form.get("max_students", ""),
         }
+        class_data.update(kwargs)
 
         if kwargs["schedule_date"] and kwargs["schedule_time"]:
             valid, msg = validate_datetime(kwargs["schedule_date"], kwargs["schedule_time"])
@@ -186,11 +193,11 @@ def instructor_edit_class(class_id):
         flash(msg, "success" if success else "error")
         if success:
             return redirect(url_for("instructor_list_classes"))
-
-    # Separar schedule em data e hora para o formulário
-    schedule_parts = class_data.get("schedule", " ").split(" ")
-    class_data["schedule_date"] = schedule_parts[0] if len(schedule_parts) > 0 else ""
-    class_data["schedule_time"] = schedule_parts[1] if len(schedule_parts) > 1 else ""
+    else:
+        # Separar schedule em data e hora para o formulário
+        schedule_parts = class_data.get("schedule", " ").split(" ")
+        class_data["schedule_date"] = schedule_parts[0] if len(schedule_parts) > 0 else ""
+        class_data["schedule_time"] = schedule_parts[1] if len(schedule_parts) > 1 else ""
 
     return render_template("instructor/edit_class.html", class_data=class_data, user=session["user"])
 

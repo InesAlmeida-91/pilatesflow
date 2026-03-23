@@ -25,7 +25,7 @@
     "id": 3,
     "name": "Pilates2",
     "schedule": "2026-03-13 10:15",
-    "duration": 45,
+    "duration": "40",
     "description": "Pilates reformer",
     "status": "confirmado",
     "max_students": 5,
