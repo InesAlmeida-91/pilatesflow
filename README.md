@@ -2,10 +2,12 @@
 
 ## Descrição do Projeto
 
-O **PilatesFlow** é uma aplicação simples desenvolvida em Python para gestão de aulas de pilates.
-O sistema permite que os **instrutores façam a criação a gestão de aulas** e que **alunos façam reservas nessas aulas**.
+O **PilatesFlow** é uma aplicação web construída em Python + Flask para gestão de um estúdio de pilates.
 
-Este projeto foi desenvolvido como exercício prático da UFCD de **Projeto de tecnologias e programação de sistemas de informação**.
+- Instrutores podem criar, editar, cancelar aulas e ver alunos inscritos.
+- Alunos podem ver aulas disponíveis, fazer reservas, e cancelar reservas.
+
+Esta app é um exercício para a UFCD de **Projeto de Tecnologias e Programação de Sistemas de Informação**.
 
 ---
 
@@ -31,12 +33,43 @@ Este projeto foi desenvolvido como exercício prático da UFCD de **Projeto de t
 ## Estrutura do Projeto
 
 ```
-(em progresso)
+main.py
+README.md
+requirements.txt
+data/
+  ├─ classes.json
+  ├─ reservations.json
+  └─ users.json
+src/
+  ├─ auth.py
+  ├─ database.py
+  ├─ utils.py
+  ├─ containers/
+  │   ├─ class_service.py
+  │   └─ reservation_service.py
+  └─ components/
+      ├─ instructor.py
+      └─ student.py
+templates/
+  ├─ base.html
+  ├─ login.html
+  ├─ register.html
+  ├─ instructor/
+  │   └─ ...
+  └─ student/
+      └─ ...
+tests/
+  ├─ test_classes.py
+  ├─ test_login.py
+  └─ test_reservations.py
 ```
 
 ### Descrição das Pastas
 
-(em progresso)
+- `data/`: armazenamento em JSON de utilizadores, aulas e reservas.
+- `src/`: lógica da aplicação e serviços.
+- `templates/`: páginas HTML
+- `tests/`: testes unitários.
 
 ---
 
