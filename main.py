@@ -243,7 +243,7 @@ def student_dashboard():
 @app.route("/student/classes")
 @student_required
 def student_available_classes():
-    classes = list_available_classes()
+    classes = list_available_classes(session["user"]["id"])
     return render_template("student/available_classes.html", classes=classes, user=session["user"])
 
 

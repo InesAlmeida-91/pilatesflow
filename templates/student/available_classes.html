@@ -27,9 +27,13 @@
             <td>{{ c.spots_left }}/{{ c.max_students }}</td>
             <td>{{ c.description if c.description else '—' }}</td>
             <td>
-                <form method="POST" action="{{ url_for('student_reserve', class_id=c.id) }}" class="inline-form">
-                    <button type="submit" class="btn btn-success" style="padding:6px 14px; font-size:0.85em;">Reservar</button>
-                </form>
+                {% if c.already_reserved %}
+                    <button type="button" class="btn btn-secondary" style="padding:6px 14px; font-size:0.85em;" disabled>Reservado</button>
+                {% else %}
+                    <form method="POST" action="{{ url_for('student_reserve', class_id=c.id) }}" class="inline-form">
+                        <button type="submit" class="btn btn-success" style="padding:6px 14px; font-size:0.85em;">Reservar</button>
+                    </form>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}

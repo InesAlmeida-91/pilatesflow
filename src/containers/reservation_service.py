@@ -10,8 +10,8 @@ from datetime import date
 from src.database import load_json, save_json, get_next_id
 from src.components.student import can_reserve
 
-def list_available_classes():
-    """Lista todas as aulas disponíveis, indicando vagas restantes e nome do instrutor."""
+def list_available_classes(student_id=None):
+
     classes = load_json("classes.json")
     reservations = load_json("reservations.json")
     users = load_json("users.json")
@@ -25,18 +25,28 @@ def list_available_classes():
         if c["status"] != "confirmado":
             continue
 
-        # Conta reservas ativas
-        active_count = sum(1 for r in reservations 
-                           if r["class_id"] == c["id"] and r["status"] == "confirmado")
+        active_count = sum(
+            1 for r in reservations
+            if r["class_id"] == c["id"] and r["status"] == "confirmado"
+        )
 
-        if active_count < c["max_students"]:
-            """Monta a estrutura da aula para o frontend, incluindo o nome do instrutor e vagas restantes."""
-            available_classes.append({
-                **c,
-                "enrolled": active_count,
-                "spots_left": c["max_students"] - active_count,
-                "instructor_name": user_map.get(c["instructor_id"], "Desconhecido")
-            })
+        reserved_by_user = False
+        if student_id is not None:
+            reserved_by_user = any(
+                r["class_id"] == c["id"] and r["student_id"] == student_id and r["status"] == "confirmado"
+                for r in reservations
+            )
+
+        if not reserved_by_user and active_count >= c["max_students"]:
+            continue
+
+        available_classes.append({
+            **c,
+            "enrolled": active_count,
+            "spots_left": c["max_students"] - active_count,
+            "instructor_name": user_map.get(c["instructor_id"], "Desconhecido"),
+            "already_reserved": reserved_by_user
+        })
 
     return available_classes
 
