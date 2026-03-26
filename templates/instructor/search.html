@@ -34,7 +34,7 @@
             <td>{{ r.student_name }}</td>
             <td>{{ r.student_email }}</td>
             <td>{{ r.class_name }}</td>
-            <td>{{ r.class_schedule }}</td>
+            <td>{{ r.class_schedule | format_schedule }}</td>
             <td>
                 {% if r.status == 'confirmado' %}
                     <span class="badge badge-success">Confirmado</span>

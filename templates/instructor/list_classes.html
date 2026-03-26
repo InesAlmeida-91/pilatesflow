@@ -23,7 +23,7 @@
         <tr>
             <td>{{ c.id }}</td>
             <td>{{ c.name }}</td>
-            <td>{{ c.schedule }}</td>
+            <td>{{ c.schedule | format_schedule }}</td>
             <td>{{ c.duration }} min</td>
             <td>{{ c.max_students }}</td>
             <td>

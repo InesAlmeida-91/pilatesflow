@@ -47,5 +47,19 @@
     "class_id": 3,
     "created_at": "2026-03-23",
     "status": "confirmado"
+  },
+  {
+    "id": 8,
+    "student_id": 2,
+    "class_id": 4,
+    "created_at": "2026-03-26",
+    "status": "cancelado"
+  },
+  {
+    "id": 9,
+    "student_id": 2,
+    "class_id": 5,
+    "created_at": "2026-03-26",
+    "status": "confirmado"
   }
 ]

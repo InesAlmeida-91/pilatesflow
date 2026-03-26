@@ -33,6 +33,22 @@ def validate_password(password):
     return True, ""
 
 
+def to_iso_date(date_str):
+    """Converte data de DD/MM/AAAA para AAAA-MM-DD. Devolve sem alterações se já estiver em ISO."""
+    if re.match(r'^\d{2}/\d{2}/\d{4}$', date_str):
+        day, month, year = date_str.split('/')
+        return f"{year}-{month}-{day}"
+    return date_str
+
+
+def from_iso_date(date_str):
+    """Converte data de AAAA-MM-DD para DD/MM/AAAA. Devolve sem alterações se já estiver no formato europeu."""
+    if re.match(r'^\d{4}-\d{2}-\d{2}$', date_str):
+        year, month, day = date_str.split('-')
+        return f"{day}/{month}/{year}"
+    return date_str
+
+
 def validate_datetime(date_str, time_str):
     """Valida formato de data (DD/MM/AAAA) e hora (HH:MM)."""
     date_pattern = r'^\d{2}/\d{2}/\d{4}$'

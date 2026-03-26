@@ -9,13 +9,14 @@ Funcionalidades das aulas:
 
 from datetime import date
 from src.database import load_json, save_json, get_next_id
+from src.utils import to_iso_date
 
 def list_classes(instructor_id=None):
     """Lista todas as aulas. Se instructor_id for dado, filtra por instrutor."""
     classes = load_json("classes.json")
     if instructor_id:
         classes = [cls for cls in classes if cls["instructor_id"] == instructor_id]
-    return classes
+    return sorted(classes, key=lambda c: c["schedule"])
 
 def create_class(name, schedule_date, schedule_time, duration, description, max_students, instructor_id):
     """
@@ -27,7 +28,7 @@ def create_class(name, schedule_date, schedule_time, duration, description, max_
     new_class = {
         "id": get_next_id(classes),
         "name": name.strip(),
-        "schedule": f"{schedule_date} {schedule_time}",
+        "schedule": f"{to_iso_date(schedule_date)} {schedule_time}",
         "duration": int(duration),
         "description": description.strip() if description else "",
         "status": "confirmado",
@@ -86,7 +87,7 @@ def edit_class(class_id, instructor_id, **kwargs):
     
     if new_date or new_time:
         current_date, current_time = editable_class["schedule"].split(" ")
-        final_date = new_date if new_date else current_date
+        final_date = to_iso_date(new_date) if new_date else current_date
         final_time = new_time if new_time else current_time
         editable_class["schedule"] = f"{final_date} {final_time}"
 

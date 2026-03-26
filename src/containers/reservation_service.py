@@ -48,7 +48,7 @@ def list_available_classes(student_id=None):
             "already_reserved": reserved_by_user
         })
 
-    return available_classes
+    return sorted(available_classes, key=lambda c: c["schedule"])
 
 def list_student_reservations(student_id):
     """Lista as reservas ativas de um aluno, incluindo nome da aula, data e status."""
@@ -75,7 +75,7 @@ def list_student_reservations(student_id):
                     "reserved_at": res["created_at"]
                 })
 
-    return result
+    return sorted(result, key=lambda r: r["schedule"])
 
 def reserve_class(student_id, class_id):
     """

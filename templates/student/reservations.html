@@ -22,7 +22,7 @@
         <tr>
             <td>{{ r.reservation_id }}</td>
             <td>{{ r.class_name }}</td>
-            <td>{{ r.schedule }}</td>
+            <td>{{ r.schedule | format_schedule }}</td>
             <td>{{ r.duration }} min</td>
             <td><span class="badge badge-success">{{ r.status }}</span></td>
             <td>{{ r.reserved_at }}</td>

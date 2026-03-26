@@ -2,7 +2,7 @@
   {
     "id": 1,
     "name": "Pilates 1",
-    "schedule": "09/03/2026 10:00",
+    "schedule": "2026-03-09 10:00",
     "duration": 60,
     "description": "primeira aula de pilates",
     "status": "cancelado",
@@ -46,7 +46,7 @@
   {
     "id": 5,
     "name": "Pilates fim de semana",
-    "schedule": "21/05/2025 10:00",
+    "schedule": "2025-05-21 10:00",
     "duration": "60",
     "description": "Pilates para este fim de semana",
     "status": "confirmado",

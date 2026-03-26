@@ -13,10 +13,18 @@ from src.containers.reservation_service import (
     list_available_classes, reserve_class, cancel_reservation,
     list_student_reservations
 )
-from src.utils import validate_datetime
+from src.utils import validate_datetime, from_iso_date
 
 app = Flask(__name__)
 app.secret_key = "pilates_studio_secret_key_2025"
+
+@app.template_filter('format_schedule')
+def format_schedule_filter(schedule):
+    """Converte 'yyyy-mm-dd HH:MM' para 'dd/mm/yyyy HH:MM' para apresentação."""
+    if not schedule or ' ' not in schedule:
+        return schedule
+    date_part, time_part = schedule.split(' ', 1)
+    return f"{from_iso_date(date_part)} {time_part}"
 
 
 # ─── Decorador para verificar login ───
@@ -196,7 +204,7 @@ def instructor_edit_class(class_id):
     else:
         # Separar schedule em data e hora para o formulário
         schedule_parts = class_data.get("schedule", " ").split(" ")
-        class_data["schedule_date"] = schedule_parts[0] if len(schedule_parts) > 0 else ""
+        class_data["schedule_date"] = from_iso_date(schedule_parts[0]) if len(schedule_parts) > 0 else ""
         class_data["schedule_time"] = schedule_parts[1] if len(schedule_parts) > 1 else ""
 
     return render_template("instructor/edit_class.html", class_data=class_data, user=session["user"])

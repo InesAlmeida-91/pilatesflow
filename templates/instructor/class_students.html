@@ -3,7 +3,7 @@
 
 {% block content %}
 <h1>Alunos Inscritos: {{ class_data.name }}</h1>
-<p><strong>Horário:</strong> {{ class_data.schedule }} | <strong>Máx. Alunos:</strong> {{ class_data.max_students }} | <strong>Inscritos:</strong> {{ students|length }}</p>
+<p><strong>Horário:</strong> {{ class_data.schedule | format_schedule }} | <strong>Máx. Alunos:</strong> {{ class_data.max_students }} | <strong>Inscritos:</strong> {{ students|length }}</p>
 
 {% if students %}
 <table>
