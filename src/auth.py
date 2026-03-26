@@ -3,6 +3,7 @@ auth.py - Lógica de login e registo de utilizadores.
 """
 
 from datetime import date
+from werkzeug.security import generate_password_hash, check_password_hash
 from src.database import load_json, save_json, get_next_id
 from src.utils import validate_email, validate_password
 
@@ -14,7 +15,7 @@ def login(email, password):
     """
     users = load_json("users.json")
     for user in users:
-        if user["email"] == email and user["password"] == password:
+        if user["email"] == email and check_password_hash(user["password"], password):
             return user
     return None
 
@@ -46,7 +47,7 @@ def register(name, email, password):
         "id": get_next_id(users),
         "name": name.strip(),
         "email": email.strip(),
-        "password": password,
+        "password": generate_password_hash(password),
         "type": "STUDENT",
         "created_at": str(date.today())
     }

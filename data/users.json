@@ -3,7 +3,7 @@
     "id": 1,
     "name": "Instrutor 1",
     "email": "instrutor@pilates.com",
-    "password": "Instrutor1!",
+    "password": "scrypt:32768:8:1$YK9Mj0OGNly4DmBd$dde792f76f9d021fd8ca99eb179994ea81c4cc85444393e4110049d0d7e605319d346f66e78c06f7962e6e7d5a5b7a0dc405a0ae248d1160bdc57870a040c7c7",
     "type": "INSTRUCTOR",
     "created_at": "2024-03-04T10:00:00Z"
   },
@@ -11,7 +11,7 @@
     "id": 2,
     "name": "Aluno 1",
     "email": "student@pilates.com",
-    "password": "Student1!",
+    "password": "scrypt:32768:8:1$7ydmSHSqMNFUvtWZ$ff5efa6a4ee99d65b1c26eb7ab96e590b2288b0f47f5e6a4a7535faaa656883f545e2350279b529408e1cd210b9a3f7e54106cd099c747596d61fd6c6b77514e",
     "type": "STUDENT",
     "created_at": "2024-03-04T10:00:00Z"
   },
@@ -19,7 +19,7 @@
     "id": 3,
     "name": "Ines teste",
     "email": "ines@teste.com",
-    "password": "Teste123@",
+    "password": "scrypt:32768:8:1$l4kEM1vVTW44RG7R$bc5a3bd2ce9697def6218b1678ce50e97439398eb021b823e208ac2d3615b72eb378885ceef7b4fbd194bf2c4807ee2d2fe08069f07e1a0ed90036398d8974d8",
     "type": "STUDENT",
     "created_at": "2026-03-20"
   }
