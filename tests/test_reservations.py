@@ -5,17 +5,21 @@ test_reservas.py - Testes unitários para gestão de reservas.
 import unittest
 import os
 import json
+import tempfile
+from unittest.mock import patch
 from src.containers.class_service import create_class, list_classes
 from src.containers.reservation_service import reserve_class, cancel_reservation, list_student_reservations, list_available_classes
-from src.database import DATA_DIR
 
 
 class TestReservations(unittest.TestCase):
 
     def setUp(self):
-        """Prepara dados de teste."""
+        """Usa directório temporário para não afectar os dados reais."""
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.patcher = patch('src.database.DATA_DIR', self.temp_dir.name)
+        self.patcher.start()
         for filename in ["classes.json", "reservations.json"]:
-            path = os.path.join(DATA_DIR, filename)
+            path = os.path.join(self.temp_dir.name, filename)
             with open(path, "w", encoding="utf-8") as f:
                 json.dump([], f)
 
@@ -23,11 +27,15 @@ class TestReservations(unittest.TestCase):
             {"id": 1, "name": "Instrutor", "email": "i@t.com", "password": "Test123!", "type": "INSTRUCTOR", "created_at": "2025-01-01"},
             {"id": 2, "name": "Aluno", "email": "a@t.com", "password": "Test123!", "type": "STUDENT", "created_at": "2025-01-01"},
         ]
-        path = os.path.join(DATA_DIR, "users.json")
+        path = os.path.join(self.temp_dir.name, "users.json")
         with open(path, "w", encoding="utf-8") as f:
             json.dump(users, f)
 
         create_class("Pilates", "20/04/2025", "09:00", 60, "", 2, 1)
+
+    def tearDown(self):
+        self.patcher.stop()
+        self.temp_dir.cleanup()
 
     def test_reserve_class(self):
         classes = list_classes()
@@ -53,9 +61,9 @@ class TestReservations(unittest.TestCase):
         reserve_class(2, classes[0]["id"])
         # Adicionar outro aluno manualmente
         from src.database import load_json, save_json
-        res = load_json("reservas.json")
+        res = load_json("reservations.json")
         res.append({"id": 2, "student_id": 3, "class_id": classes[0]["id"], "created_at": "2025-01-01", "status": "confirmado"})
-        save_json("reservas.json", res)
+        save_json("reservations.json", res)
 
         available = list_available_classes()
         self.assertEqual(len(available), 0)  # Sem vagas

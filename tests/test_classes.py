@@ -5,18 +5,26 @@ test_aulas.py - Testes unitários para gestão de aulas.
 import unittest
 import os
 import json
+import tempfile
+from unittest.mock import patch
 from src.containers.class_service import create_class, list_classes, cancel_class, edit_class, get_class_by_id
-from src.database import DATA_DIR
 
 
 class TestClasses(unittest.TestCase):
 
     def setUp(self):
-        """Limpa dados de aulas e reservas antes de cada teste."""
+        """Usa directório temporário para não afectar os dados reais."""
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.patcher = patch('src.database.DATA_DIR', self.temp_dir.name)
+        self.patcher.start()
         for filename in ["classes.json", "reservations.json"]:
-            path = os.path.join(DATA_DIR, filename)
+            path = os.path.join(self.temp_dir.name, filename)
             with open(path, "w", encoding="utf-8") as f:
                 json.dump([], f)
+
+    def tearDown(self):
+        self.patcher.stop()
+        self.temp_dir.cleanup()
 
     def test_create_class(self):
         success, msg = create_class("Pilates Mat", "15/04/2025", "10:00", 60, "Aula básica", 10, 1)

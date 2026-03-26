@@ -5,27 +5,36 @@ test_login.py - Testes unitários para login e registo.
 import unittest
 import os
 import json
+import tempfile
+from unittest.mock import patch
+from werkzeug.security import generate_password_hash
 from src.auth import login, register
-from src.database import DATA_DIR
 
 
 class TestLogin(unittest.TestCase):
 
     def setUp(self):
-        """Prepara dados de teste."""
-        self.test_users = [
+        """Usa directório temporário para não afectar os dados reais."""
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.patcher = patch('src.database.DATA_DIR', self.temp_dir.name)
+        self.patcher.start()
+        test_users = [
             {
                 "id": 1,
                 "name": "Instrutor Teste",
                 "email": "instrutor@test.com",
-                "password": "Test123!",
+                "password": generate_password_hash("Test123!"),
                 "type": "INSTRUCTOR",
                 "created_at": "2025-01-01"
             }
         ]
-        path = os.path.join(DATA_DIR, "users.json")
+        path = os.path.join(self.temp_dir.name, "users.json")
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(self.test_users, f)
+            json.dump(test_users, f)
+
+    def tearDown(self):
+        self.patcher.stop()
+        self.temp_dir.cleanup()
 
     def test_login_success(self):
         user = login("instrutor@test.com", "Test123!")
