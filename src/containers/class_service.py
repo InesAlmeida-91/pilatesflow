@@ -9,7 +9,7 @@ Funcionalidades das aulas:
 
 from datetime import date
 from src.database import load_json, save_json, get_next_id
-from src.utils import to_iso_date
+from src.utils import to_iso_date, validate_future_datetime
 
 def list_classes(instructor_id=None):
     """Lista todas as aulas. Se instructor_id for dado, filtra por instrutor."""
@@ -23,6 +23,10 @@ def create_class(name, schedule_date, schedule_time, duration, description, max_
     Cria uma nova aula. 
     Retorna (sucesso: bool, mensagem: str).
     """
+    is_valid, msg = validate_future_datetime(schedule_date, schedule_time)
+    if not is_valid:
+        return False, msg
+
     classes = load_json("classes.json")
 
     new_class = {
@@ -89,6 +93,11 @@ def edit_class(class_id, instructor_id, **kwargs):
         current_date, current_time = editable_class["schedule"].split(" ")
         final_date = to_iso_date(new_date) if new_date else current_date
         final_time = new_time if new_time else current_time
+
+        is_valid, msg = validate_future_datetime(final_date, final_time)
+        if not is_valid:
+            return False, msg
+
         editable_class["schedule"] = f"{final_date} {final_time}"
 
     save_json("classes.json", classes)

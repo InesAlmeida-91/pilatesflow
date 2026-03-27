@@ -3,7 +3,7 @@ utils.py - Funções auxiliares (validações, etc.)
 """
 
 import re
-
+from datetime import datetime
 
 def validate_email(email):
     """Verifica se o email cumpre as regras de formato de e-mail."""
@@ -72,4 +72,30 @@ def validate_datetime(date_str, time_str):
     if hour < 0 or hour > 23 or minute < 0 or minute > 59:
         return False, "Hora inválida."
     
+    return True, ""
+
+
+def validate_future_datetime(date_str, time_str):
+    """Valida se a data+hora estão no futuro."""
+    if "/" in date_str:
+        valid_format, msg = validate_datetime(date_str, time_str)
+        if not valid_format:
+            return False, msg
+        parse_format = "%d/%m/%Y %H:%M"
+    else:
+        # aceita data em ISO (YYYY-MM-DD)
+        if not re.match(r'^\d{4}-\d{2}-\d{2}$', date_str):
+            return False, "Formato de data inválido. Use DD/MM/AAAA ou AAAA-MM-DD."
+        if not re.match(r'^\d{2}:\d{2}$', time_str):
+            return False, "Formato de hora inválido. Use HH:MM."
+        parse_format = "%Y-%m-%d %H:%M"
+
+    try:
+        target_dt = datetime.strptime(f"{date_str} {time_str}", parse_format)
+    except ValueError:
+        return False, "Data ou hora inválida."
+
+    if target_dt <= datetime.now():
+        return False, "A data e hora devem ser no futuro."
+
     return True, ""

@@ -55,6 +55,39 @@ class TestClasses(unittest.TestCase):
         updated = get_class_by_id(classes[0]["id"])
         self.assertEqual(updated["name"], "Pilates Avançado")
 
+    def test_create_class_past_datetime_is_rejected(self):
+        from datetime import datetime, timedelta
+
+        now = datetime.now()
+        yesterday = now - timedelta(days=1)
+        date_past = yesterday.strftime("%d/%m/%Y")
+        time_past = yesterday.strftime("%H:%M")
+
+        success, msg = create_class("Pilates", date_past, time_past, 60, "", 10, 1)
+        self.assertFalse(success)
+        self.assertIn("futuro", msg.lower())
+
+    def test_create_class_today_with_past_time_is_rejected(self):
+        from datetime import datetime, timedelta
+
+        now = datetime.now()
+        date_today = now.strftime("%d/%m/%Y")
+        time_past = (now - timedelta(minutes=15)).strftime("%H:%M")
+
+        success, msg = create_class("Pilates", date_today, time_past, 60, "", 10, 1)
+        self.assertFalse(success)
+        self.assertIn("futuro", msg.lower())
+
+    def test_create_class_today_with_future_time_is_accepted(self):
+        from datetime import datetime, timedelta
+
+        now = datetime.now()
+        date_today = now.strftime("%d/%m/%Y")
+        time_future = (now + timedelta(minutes=15)).strftime("%H:%M")
+
+        success, msg = create_class("Pilates", date_today, time_future, 60, "", 10, 1)
+        self.assertTrue(success)
+
 
 if __name__ == "__main__":
     unittest.main()
