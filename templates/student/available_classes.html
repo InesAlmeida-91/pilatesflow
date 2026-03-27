@@ -39,6 +39,21 @@
         {% endfor %}
     </tbody>
 </table>
+
+{% if total_pages and total_pages > 1 %}
+<nav class="pagination" style="display:flex; justify-content:center; align-items:center; gap:8px; background:none; padding:10px 0;">
+    {% if current_page > 1 %}
+        <a class="btn" href="{{ url_for('student_available_classes', page=current_page-1) }}">Anterior</a>
+    {% endif %}
+
+    <span style="font-weight:600;">Página {{ current_page }} de {{ total_pages }}</span>
+
+    {% if current_page < total_pages %}
+        <a class="btn" href="{{ url_for('student_available_classes', page=current_page+1) }}">Próxima</a>
+    {% endif %}
+</nav>
+{% endif %}
+
 {% else %}
 <div class="card">
     <p>Não há aulas disponíveis de momento.</p>

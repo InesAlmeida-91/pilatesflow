@@ -3,7 +3,31 @@ utils.py - Funções auxiliares (validações, etc.)
 """
 
 import re
+import math
 from datetime import datetime
+
+def paginate(items, page=1, per_page=5):
+    """Retorna sublista paginada e metadados."""
+    try:
+        page = int(page)
+    except (TypeError, ValueError):
+        page = 1
+
+    if page < 1:
+        page = 1
+
+    total_items = len(items)
+    total_pages = max(1, math.ceil(total_items / per_page))
+
+    if page > total_pages:
+        page = total_pages
+
+    start = (page - 1) * per_page
+    end = start + per_page
+    page_items = items[start:end]
+
+    return page_items, total_pages, page
+
 
 def validate_email(email):
     """Verifica se o email cumpre as regras de formato de e-mail."""

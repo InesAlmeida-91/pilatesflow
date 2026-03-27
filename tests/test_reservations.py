@@ -6,9 +6,11 @@ import unittest
 import os
 import json
 import tempfile
+from datetime import datetime, timedelta
 from unittest.mock import patch
 from src.containers.class_service import create_class, list_classes
 from src.containers.reservation_service import reserve_class, cancel_reservation, list_student_reservations, list_available_classes
+from src.utils import paginate
 
 
 class TestReservations(unittest.TestCase):
@@ -31,7 +33,8 @@ class TestReservations(unittest.TestCase):
         with open(path, "w", encoding="utf-8") as f:
             json.dump(users, f)
 
-        create_class("Pilates", "20/04/2025", "09:00", 60, "", 2, 1)
+        future_date = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
+        create_class("Pilates", future_date, "09:00", 60, "", 2, 1)
 
     def tearDown(self):
         self.patcher.stop()
@@ -67,6 +70,23 @@ class TestReservations(unittest.TestCase):
 
         available = list_available_classes()
         self.assertEqual(len(available), 0)  # Sem vagas
+
+    def test_reservations_pagination(self):
+        # Cria várias reservas para o mesmo aluno em aulas diferentes
+        for i in range(7):
+            future_date = (datetime.now() + timedelta(days=i + 2)).strftime("%d/%m/%Y")
+            create_class(f"Pilates {i+1}", future_date, "09:00", 60, "", 10, 1)
+            classes = list_classes()
+            reserve_class(2, classes[-1]["id"])
+
+        all_reservations = list_student_reservations(2)
+        page1, total_pages, current_page = paginate(all_reservations, 1, 5)
+        page2, _, _ = paginate(all_reservations, 2, 5)
+
+        self.assertEqual(total_pages, 2)
+        self.assertEqual(len(page1), 5)
+        self.assertEqual(len(page2), 2)
+        self.assertEqual(current_page, 1)
 
 
 if __name__ == "__main__":

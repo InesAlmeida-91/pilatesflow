@@ -6,8 +6,10 @@ import unittest
 import os
 import json
 import tempfile
+from datetime import datetime, timedelta
 from unittest.mock import patch
 from src.containers.class_service import create_class, list_classes, cancel_class, edit_class, get_class_by_id
+from src.utils import paginate
 
 
 class TestClasses(unittest.TestCase):
@@ -27,14 +29,16 @@ class TestClasses(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def test_create_class(self):
-        success, msg = create_class("Pilates Mat", "15/04/2025", "10:00", 60, "Aula básica", 10, 1)
+        future_date = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
+        success, msg = create_class("Pilates Mat", future_date, "10:00", 60, "Aula básica", 10, 1)
         self.assertTrue(success)
         classes = list_classes()
         self.assertEqual(len(classes), 1)
         self.assertEqual(classes[0]["name"], "Pilates Mat")
 
     def test_cancel_class(self):
-        create_class("Pilates", "15/04/2025", "10:00", 60, "", 10, 1)
+        future_date = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
+        create_class("Pilates", future_date, "10:00", 60, "", 10, 1)
         classes = list_classes()
         success, msg = cancel_class(classes[0]["id"], 1)
         self.assertTrue(success)
@@ -42,13 +46,15 @@ class TestClasses(unittest.TestCase):
         self.assertEqual(updated["status"], "cancelado")
 
     def test_cancel_class_wrong_instructor(self):
-        create_class("Pilates", "15/04/2025", "10:00", 60, "", 10, 1)
+        future_date = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
+        create_class("Pilates", future_date, "10:00", 60, "", 10, 1)
         classes = list_classes()
         success, msg = cancel_class(classes[0]["id"], 999)
         self.assertFalse(success)
 
     def test_edit_class(self):
-        create_class("Pilates", "15/04/2025", "10:00", 60, "", 10, 1)
+        future_date = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
+        create_class("Pilates", future_date, "10:00", 60, "", 10, 1)
         classes = list_classes()
         success, msg = edit_class(classes[0]["id"], 1, name="Pilates Avançado")
         self.assertTrue(success)
@@ -87,6 +93,21 @@ class TestClasses(unittest.TestCase):
 
         success, msg = create_class("Pilates", date_today, time_future, 60, "", 10, 1)
         self.assertTrue(success)
+
+    def test_pagination_workflow(self):
+        now = datetime.now()
+        for i in range(7):
+            schedule_date = (now + timedelta(days=i + 1)).strftime("%d/%m/%Y")
+            create_class(f"Pilates {i+1}", schedule_date, "09:00", 60, "", 10, 1)
+
+        all_classes = list_classes(instructor_id=1)
+        page1, total_pages, current_page = paginate(all_classes, 1, 5)
+        page2, _, _ = paginate(all_classes, 2, 5)
+
+        self.assertEqual(total_pages, 2)
+        self.assertEqual(len(page1), 5)
+        self.assertEqual(len(page2), 2)
+        self.assertEqual(current_page, 1)
 
 
 if __name__ == "__main__":

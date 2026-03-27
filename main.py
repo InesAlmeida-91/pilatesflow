@@ -13,7 +13,7 @@ from src.containers.reservation_service import (
     list_available_classes, reserve_class, cancel_reservation,
     list_student_reservations
 )
-from src.utils import validate_datetime, from_iso_date
+from src.utils import validate_datetime, from_iso_date, paginate
 
 app = Flask(__name__)
 app.secret_key = "pilates_studio_secret_key_2025"
@@ -133,8 +133,16 @@ def instructor_dashboard():
 @app.route("/instructor/classes")
 @instructor_required
 def instructor_list_classes():
-    classes = list_classes(instructor_id=session["user"]["id"])
-    return render_template("instructor/list_classes.html", classes=classes, user=session["user"])
+    page = request.args.get("page", 1, type=int)
+    classes_all = list_classes(instructor_id=session["user"]["id"])
+    classes, total_pages, current_page = paginate(classes_all, page, 5)
+    return render_template(
+        "instructor/list_classes.html",
+        classes=classes,
+        user=session["user"],
+        total_pages=total_pages,
+        current_page=current_page
+    )
 
 
 @app.route("/instructor/classes/create", methods=["GET", "POST"])
@@ -258,8 +266,16 @@ def student_dashboard():
 @app.route("/student/classes")
 @student_required
 def student_available_classes():
-    classes = list_available_classes(session["user"]["id"])
-    return render_template("student/available_classes.html", classes=classes, user=session["user"])
+    page = request.args.get("page", 1, type=int)
+    classes_all = list_available_classes(session["user"]["id"])
+    classes, total_pages, current_page = paginate(classes_all, page, 5)
+    return render_template(
+        "student/available_classes.html",
+        classes=classes,
+        user=session["user"],
+        total_pages=total_pages,
+        current_page=current_page
+    )
 
 
 @app.route("/student/reserve/<int:class_id>", methods=["POST"])
@@ -273,8 +289,16 @@ def student_reserve(class_id):
 @app.route("/student/reservations")
 @student_required
 def student_reservations():
-    reservations = list_student_reservations(session["user"]["id"])
-    return render_template("student/reservations.html", reservations=reservations, user=session["user"])
+    page = request.args.get("page", 1, type=int)
+    reservations_all = list_student_reservations(session["user"]["id"])
+    reservations, total_pages, current_page = paginate(reservations_all, page, 5)
+    return render_template(
+        "student/reservations.html",
+        reservations=reservations,
+        user=session["user"],
+        total_pages=total_pages,
+        current_page=current_page
+    )
 
 
 @app.route("/student/reservations/<int:reservation_id>/cancel", methods=["POST"])
