@@ -15,6 +15,7 @@
 </div>
 
 {% if classes %}
+<div class="table-responsive">
 <table>
     <thead>
         <tr>
@@ -41,7 +42,7 @@
                     <a href="{{ url_for('instructor_class_students', class_id=c.id) }}" class="btn btn-primary" style="padding:6px 12px; font-size:0.85em;">👥 Alunos</a>
                     {% if not history_mode %}
                         <a href="{{ url_for('instructor_edit_class', class_id=c.id) }}" class="btn btn-secondary" style="padding:6px 12px; font-size:0.85em;">✏️ Editar</a>
-                        <form method="POST" action="{{ url_for('instructor_cancel_class', class_id=c.id) }}" class="inline-form" onsubmit="return confirm('Tem a certeza que deseja cancelar esta aula?');">
+                        <form method="POST" action="{{ url_for('instructor_cancel_class', class_id=c.id) }}" class="inline-form" onsubmit="return confirmAction(this, 'Tem a certeza que deseja cancelar esta aula?', 'Cancelar Aula');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-danger" style="padding:6px 12px; font-size:0.85em;">❌ Cancelar</button>
                         </form>
@@ -52,6 +53,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 
 {% if total_pages and total_pages > 1 %}
 <nav class="pagination" style="display:flex; justify-content:center; align-items:center; gap:8px; background:none; padding:10px 0;">

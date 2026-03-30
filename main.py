@@ -9,7 +9,8 @@ import csv
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, flash, Response
 from flask_wtf.csrf import CSRFProtect
-from src.auth import login, register, update_profile
+from flask_mail import Mail, Message
+from src.auth import login, register, update_profile, generate_reset_token, verify_reset_token, reset_password
 from src.containers.class_service import (
     list_classes, create_class, edit_class, cancel_class,
     get_class_by_id, get_enrolled_students, search_reservations,
@@ -17,7 +18,8 @@ from src.containers.class_service import (
 )
 from src.containers.reservation_service import (
     list_available_classes, reserve_class, cancel_reservation,
-    list_student_reservations
+    list_student_reservations, join_waitlist,
+    get_student_notifications, mark_notifications_read
 )
 from src.utils import validate_datetime, from_iso_date, paginate
 
@@ -26,6 +28,15 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key")
 csrf = CSRFProtect(app)
+
+# Configuração Flask-Mail
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
+app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS", "True").lower() in ("true", "1")
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME", "")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD", "")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@pilates.com")
+mail = Mail(app)
 
 @app.template_filter('format_schedule')
 def format_schedule_filter(schedule):
@@ -127,6 +138,59 @@ def logout():
     session.pop("user", None)
     flash("Sessão terminada com sucesso.", "success")
     return redirect(url_for("login_page"))
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        from src.database import load_json
+        users = load_json("users.json")
+        user = next((u for u in users if u["email"] == email), None)
+
+        if user:
+            token = generate_reset_token(email, app.secret_key)
+            reset_url = url_for("reset_password_page", token=token, _external=True)
+            try:
+                msg = Message(
+                    "Recuperação de Password - Estúdio Pilates",
+                    recipients=[email]
+                )
+                msg.html = f"""
+                <h2>Recuperação de Password</h2>
+                <p>Olá {user['name']},</p>
+                <p>Clique no link abaixo para redefinir a sua password:</p>
+                <p><a href="{reset_url}">{reset_url}</a></p>
+                <p>Este link é válido por 1 hora.</p>
+                <p>Se não solicitou esta recuperação, ignore este e-mail.</p>
+                """
+                mail.send(msg)
+            except Exception:
+                # Em desenvolvimento, imprimir o link na consola
+                print(f"\n[DEV] Link de recuperação para {email}: {reset_url}\n")
+
+        # Mensagem genérica para não revelar se o e-mail existe
+        flash("Se o e-mail existir no sistema, receberá instruções de recuperação.", "success")
+        return redirect(url_for("login_page"))
+
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password_page(token):
+    email = verify_reset_token(token, app.secret_key)
+    if not email:
+        flash("Link de recuperação inválido ou expirado.", "error")
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        success, msg = reset_password(email, password)
+        flash(msg, "success" if success else "error")
+        if success:
+            return redirect(url_for("login_page"))
+
+    return render_template("reset_password.html", token=token)
 
 
 # ═══════════════════════════════════════
@@ -317,21 +381,40 @@ def instructor_search():
 @app.route("/student")
 @student_required
 def student_dashboard():
-    return render_template("student/dashboard.html", user=session["user"])
+    notifications = get_student_notifications(session["user"]["id"])
+    return render_template("student/dashboard.html", user=session["user"], notifications=notifications)
 
 
 @app.route("/student/classes")
 @student_required
 def student_available_classes():
     page = request.args.get("page", 1, type=int)
-    classes_all = list_available_classes(session["user"]["id"])
+    filter_name = request.args.get("name", "").strip()
+    filter_date = request.args.get("date", "").strip()
+    filter_instructor = request.args.get("instructor", "").strip()
+
+    # Converter data DD/MM/YYYY para ISO se necessário
+    iso_date = None
+    if filter_date:
+        from src.utils import to_iso_date
+        iso_date = to_iso_date(filter_date)
+
+    classes_all = list_available_classes(
+        session["user"]["id"],
+        filter_name=filter_name or None,
+        filter_date=iso_date or None,
+        filter_instructor=filter_instructor or None
+    )
     classes, total_pages, current_page = paginate(classes_all, page, 5)
     return render_template(
         "student/available_classes.html",
         classes=classes,
         user=session["user"],
         total_pages=total_pages,
-        current_page=current_page
+        current_page=current_page,
+        filter_name=filter_name,
+        filter_date=filter_date,
+        filter_instructor=filter_instructor
     )
 
 
@@ -341,6 +424,21 @@ def student_reserve(class_id):
     success, msg = reserve_class(session["user"]["id"], class_id)
     flash(msg, "success" if success else "error")
     return redirect(url_for("student_available_classes"))
+
+
+@app.route("/student/waitlist/<int:class_id>", methods=["POST"])
+@student_required
+def student_join_waitlist(class_id):
+    success, msg = join_waitlist(session["user"]["id"], class_id)
+    flash(msg, "success" if success else "error")
+    return redirect(url_for("student_available_classes"))
+
+
+@app.route("/student/notifications/read", methods=["POST"])
+@student_required
+def student_dismiss_notifications():
+    mark_notifications_read(session["user"]["id"])
+    return redirect(url_for("student_dashboard"))
 
 
 @app.route("/student/reservations")

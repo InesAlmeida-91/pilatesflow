@@ -9,6 +9,7 @@
 <div style="margin: 15px 0;">
     <a href="{{ url_for('instructor_export_students', class_id=class_data.id) }}" class="btn btn-success">📥 Exportar CSV</a>
 </div>
+<div class="table-responsive">
 <table>
     <thead>
         <tr>
@@ -29,6 +30,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% else %}
 <div class="card">
     <p>Nenhum aluno inscrito nesta aula.</p>

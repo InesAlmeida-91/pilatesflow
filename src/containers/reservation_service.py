@@ -43,11 +43,12 @@ def _serialize_reservation(reservation, class_info, history=False):
         "reserved_at": reservation["created_at"]
     }
 
-def list_available_classes(student_id=None):
+def list_available_classes(student_id=None, filter_name=None, filter_date=None, filter_instructor=None):
 
     classes = load_json("classes.json")
     reservations = load_json("reservations.json")
     users = load_json("users.json")
+    waitlist = load_json("waitlist.json")
 
     # Mapa de ids de utilizadores para nomes, para evitar múltiplas buscas
     user_map = {u["id"]: u["name"] for u in users}
@@ -59,6 +60,18 @@ def list_available_classes(student_id=None):
             continue
         if is_schedule_in_past(c["schedule"]):
             continue
+
+        # Filtros
+        if filter_name and filter_name.lower() not in c["name"].lower():
+            continue
+        if filter_date:
+            class_date = c["schedule"].split(" ")[0]  # YYYY-MM-DD
+            if class_date != filter_date:
+                continue
+        if filter_instructor:
+            instructor_name = user_map.get(c["instructor_id"], "")
+            if filter_instructor.lower() not in instructor_name.lower():
+                continue
 
         active_count = sum(
             1 for r in reservations
@@ -72,15 +85,21 @@ def list_available_classes(student_id=None):
                 for r in reservations
             )
 
-        if not reserved_by_user and active_count >= c["max_students"]:
-            continue
+        # Verificar se o aluno já está na lista de espera
+        on_waitlist = False
+        if student_id is not None:
+            on_waitlist = any(
+                w["class_id"] == c["id"] and w["student_id"] == student_id
+                for w in waitlist
+            )
 
         available_classes.append({
             **c,
             "enrolled": active_count,
             "spots_left": c["max_students"] - active_count,
             "instructor_name": user_map.get(c["instructor_id"], "Desconhecido"),
-            "already_reserved": reserved_by_user
+            "already_reserved": reserved_by_user,
+            "on_waitlist": on_waitlist
         })
 
     return sorted(available_classes, key=lambda c: c["schedule"])
@@ -148,8 +167,8 @@ def cancel_reservation(reservation_id, student_id):
     if not reservation:
         return False, "Reserva não encontrada."
 
-    is_instructor = reservation["student_id"] == student_id
-    if not is_instructor:
+    is_owner = reservation["student_id"] == student_id
+    if not is_owner:
         return False, "Você não tem permissão para cancelar esta reserva."
 
     if reservation["status"] == "cancelado":
@@ -158,4 +177,81 @@ def cancel_reservation(reservation_id, student_id):
     reservation["status"] = "cancelado"
     save_json("reservations.json", reservations)
 
+    # Notificar o próximo aluno na lista de espera
+    _notify_next_waitlisted(reservation["class_id"])
+
     return True, "Reserva cancelada com sucesso."
+
+
+def join_waitlist(student_id, class_id):
+    """Adiciona um aluno à lista de espera de uma aula cheia."""
+    classes = load_json("classes.json")
+    class_info = next((c for c in classes if c["id"] == class_id), None)
+    if not class_info:
+        return False, "Aula não encontrada."
+
+    waitlist = load_json("waitlist.json")
+
+    already_on = any(w["student_id"] == student_id and w["class_id"] == class_id for w in waitlist)
+    if already_on:
+        return False, "Já está na lista de espera desta aula."
+
+    waitlist.append({
+        "id": get_next_id(waitlist),
+        "student_id": student_id,
+        "class_id": class_id,
+        "created_at": str(date.today())
+    })
+    save_json("waitlist.json", waitlist)
+
+    return True, f"Adicionado à lista de espera da aula '{class_info['name']}'."
+
+
+def _notify_next_waitlisted(class_id):
+    """Quando uma vaga abre, notifica o próximo aluno na lista de espera."""
+    waitlist = load_json("waitlist.json")
+    candidates = [w for w in waitlist if w["class_id"] == class_id]
+    if not candidates:
+        return
+
+    # Ordenar por data de entrada (FIFO)
+    candidates.sort(key=lambda w: w["created_at"])
+    next_student = candidates[0]
+
+    # Criar notificação
+    classes = load_json("classes.json")
+    class_info = next((c for c in classes if c["id"] == class_id), None)
+    class_name = class_info["name"] if class_info else "Aula"
+
+    notifications = load_json("notifications.json")
+    notifications.append({
+        "id": get_next_id(notifications),
+        "student_id": next_student["student_id"],
+        "message": f"Abriu uma vaga na aula '{class_name}'! Reserve já o seu lugar.",
+        "class_id": class_id,
+        "read": False,
+        "created_at": str(date.today())
+    })
+    save_json("notifications.json", notifications)
+
+    # Remover da lista de espera
+    waitlist = [w for w in waitlist if w["id"] != next_student["id"]]
+    save_json("waitlist.json", waitlist)
+
+
+def get_student_notifications(student_id):
+    """Retorna notificações não lidas de um aluno."""
+    notifications = load_json("notifications.json")
+    return [n for n in notifications if n["student_id"] == student_id and not n["read"]]
+
+
+def mark_notifications_read(student_id):
+    """Marca todas as notificações de um aluno como lidas."""
+    notifications = load_json("notifications.json")
+    changed = False
+    for n in notifications:
+        if n["student_id"] == student_id and not n["read"]:
+            n["read"] = True
+            changed = True
+    if changed:
+        save_json("notifications.json", notifications)

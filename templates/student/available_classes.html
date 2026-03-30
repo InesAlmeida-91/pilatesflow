@@ -4,7 +4,31 @@
 {% block content %}
 <h1>Aulas Disponíveis</h1>
 
+<div class="card" style="margin-bottom: 20px;">
+    <form method="GET" action="{{ url_for('student_available_classes') }}">
+        <div class="info-row">
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="name">Nome da aula</label>
+                <input type="text" id="name" name="name" placeholder="Ex: Pilates" value="{{ filter_name }}">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="date">Data (DD/MM/AAAA)</label>
+                <input type="text" id="date" name="date" placeholder="25/03/2026" value="{{ filter_date }}">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="instructor">Instrutor</label>
+                <input type="text" id="instructor" name="instructor" placeholder="Nome do instrutor" value="{{ filter_instructor }}">
+            </div>
+        </div>
+        <div style="margin-top: 12px; display:flex; gap:10px;">
+            <button type="submit" class="btn btn-primary" style="padding:8px 20px;">🔍 Filtrar</button>
+            <a href="{{ url_for('student_available_classes') }}" class="btn btn-secondary" style="padding:8px 20px;">Limpar</a>
+        </div>
+    </form>
+</div>
+
 {% if classes %}
+<div class="table-responsive">
 <table>
     <thead>
         <tr>
@@ -29,6 +53,13 @@
             <td>
                 {% if c.already_reserved %}
                     <button type="button" class="btn btn-secondary" style="padding:6px 14px; font-size:0.85em;" disabled>Reservado</button>
+                {% elif c.spots_left <= 0 and c.on_waitlist %}
+                    <button type="button" class="btn btn-secondary" style="padding:6px 14px; font-size:0.85em;" disabled>Na lista de espera</button>
+                {% elif c.spots_left <= 0 %}
+                    <form method="POST" action="{{ url_for('student_join_waitlist', class_id=c.id) }}" class="inline-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-secondary" style="padding:6px 14px; font-size:0.85em;">📋 Lista de espera</button>
+                    </form>
                 {% else %}
                     <form method="POST" action="{{ url_for('student_reserve', class_id=c.id) }}" class="inline-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -40,24 +71,25 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 
 {% if total_pages and total_pages > 1 %}
 <nav class="pagination" style="display:flex; justify-content:center; align-items:center; gap:8px; background:none; padding:10px 0;">
     {% if current_page > 1 %}
-        <a class="btn" href="{{ url_for('student_available_classes', page=current_page-1) }}">Anterior</a>
+        <a class="btn" href="{{ url_for('student_available_classes', page=current_page-1, name=filter_name, date=filter_date, instructor=filter_instructor) }}">Anterior</a>
     {% endif %}
 
     <span style="font-weight:600;">Página {{ current_page }} de {{ total_pages }}</span>
 
     {% if current_page < total_pages %}
-        <a class="btn" href="{{ url_for('student_available_classes', page=current_page+1) }}">Próxima</a>
+        <a class="btn" href="{{ url_for('student_available_classes', page=current_page+1, name=filter_name, date=filter_date, instructor=filter_instructor) }}">Próxima</a>
     {% endif %}
 </nav>
 {% endif %}
 
 {% else %}
 <div class="card">
-    <p>Não há aulas disponíveis de momento.</p>
+    <p>Não há aulas disponíveis de momento.{% if filter_name or filter_date or filter_instructor %} Tente ajustar os filtros.{% endif %}</p>
 </div>
 {% endif %}
 {% endblock %}

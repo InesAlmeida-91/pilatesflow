@@ -10,6 +10,7 @@
 </div>
 
 {% if reservations %}
+<div class="table-responsive">
 <table>
     <thead>
         <tr>
@@ -35,7 +36,7 @@
             <td>{{ r.reserved_at }}</td>
             {% if not history_mode %}
             <td>
-                <form method="POST" action="{{ url_for('student_cancel_reservation', reservation_id=r.reservation_id) }}" class="inline-form" onsubmit="return confirm('Tem a certeza que deseja cancelar esta reserva?');">
+                <form method="POST" action="{{ url_for('student_cancel_reservation', reservation_id=r.reservation_id) }}" class="inline-form" onsubmit="return confirmAction(this, 'Tem a certeza que deseja cancelar esta reserva?', 'Cancelar Reserva');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger" style="padding:6px 14px; font-size:0.85em;">Cancelar</button>
                 </form>
@@ -45,6 +46,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 
 {% if total_pages and total_pages > 1 %}
 <nav class="pagination" style="display:flex; justify-content:center; align-items:center; gap:8px; background:none; padding:10px 0;">

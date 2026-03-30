@@ -4,6 +4,7 @@ auth.py - Lógica de login e registo de utilizadores.
 
 from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import URLSafeTimedSerializer
 from src.database import load_json, save_json, get_next_id
 from src.utils import validate_email, validate_password
 
@@ -92,3 +93,35 @@ def update_profile(user_id, name, email, current_password, new_password):
 
     save_json("users.json", users)
     return True, "Perfil atualizado com sucesso.", user
+
+
+def generate_reset_token(email, secret_key):
+    """Gera um token seguro para recuperação de password."""
+    s = URLSafeTimedSerializer(secret_key)
+    return s.dumps(email, salt="password-reset")
+
+
+def verify_reset_token(token, secret_key, max_age=3600):
+    """Verifica o token de recuperação (válido por 1 hora por defeito). Retorna o email ou None."""
+    s = URLSafeTimedSerializer(secret_key)
+    try:
+        email = s.loads(token, salt="password-reset", max_age=max_age)
+    except Exception:
+        return None
+    return email
+
+
+def reset_password(email, new_password):
+    """Redefine a password de um utilizador a partir do email."""
+    valid, msg = validate_password(new_password)
+    if not valid:
+        return False, msg
+
+    users = load_json("users.json")
+    user = next((u for u in users if u["email"] == email), None)
+    if not user:
+        return False, "Utilizador não encontrado."
+
+    user["password"] = generate_password_hash(new_password)
+    save_json("users.json", users)
+    return True, "Password redefinida com sucesso."

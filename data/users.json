@@ -22,5 +22,13 @@
     "password": "scrypt:32768:8:1$l4kEM1vVTW44RG7R$bc5a3bd2ce9697def6218b1678ce50e97439398eb021b823e208ac2d3615b72eb378885ceef7b4fbd194bf2c4807ee2d2fe08069f07e1a0ed90036398d8974d8",
     "type": "STUDENT",
     "created_at": "2026-03-20"
+  },
+  {
+    "id": 4,
+    "name": "Bernardo Lagos",
+    "email": "lagostest123@hotmail.com",
+    "password": "scrypt:32768:8:1$DCpFyW8PCn0VtPjD$371c40fd7e2f1b7ffd30560a26085ca9d9728d8e542aaa69099692154c5c174f5937703449273c7e69568af6eac92842e93fe1f66284cf2faffb3e3265d947e9",
+    "type": "STUDENT",
+    "created_at": "2026-03-30"
   }
 ]

@@ -21,7 +21,7 @@ class TestReservations(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.patcher = patch('src.database.DATA_DIR', self.temp_dir.name)
         self.patcher.start()
-        for filename in ["classes.json", "reservations.json"]:
+        for filename in ["classes.json", "reservations.json", "waitlist.json", "notifications.json"]:
             path = os.path.join(self.temp_dir.name, filename)
             with open(path, "w", encoding="utf-8") as f:
                 json.dump([], f)
@@ -70,7 +70,8 @@ class TestReservations(unittest.TestCase):
         save_json("reservations.json", res)
 
         available = list_available_classes()
-        self.assertEqual(len(available), 0)  # Sem vagas
+        self.assertEqual(len(available), 1)  # Aula visível mas sem vagas (lista de espera)
+        self.assertEqual(available[0]["spots_left"], 0)
 
     def test_reservations_pagination(self):
         # Cria várias reservas para o mesmo aluno em aulas diferentes

@@ -20,7 +20,7 @@ class TestClasses(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.patcher = patch('src.database.DATA_DIR', self.temp_dir.name)
         self.patcher.start()
-        for filename in ["classes.json", "reservations.json"]:
+        for filename in ["classes.json", "reservations.json", "waitlist.json", "notifications.json"]:
             path = os.path.join(self.temp_dir.name, filename)
             with open(path, "w", encoding="utf-8") as f:
                 json.dump([], f)
