@@ -9,12 +9,17 @@
     <a href="{{ url_for('instructor_list_classes') }}" class="dashboard-card">
         <div class="icon">📋</div>
         <h3>Listar Aulas</h3>
-        <p>Ver todas as suas aulas registadas</p>
+        <p>Ver e gerir as suas aulas ativas</p>
     </a>
     <a href="{{ url_for('instructor_create_class') }}" class="dashboard-card">
         <div class="icon">➕</div>
         <h3>Criar Aula</h3>
         <p>Adicionar uma nova aula ao calendário</p>
+    </a>
+    <a href="{{ url_for('instructor_class_history') }}" class="dashboard-card">
+        <div class="icon">🕘</div>
+        <h3>Histórico de Aulas</h3>
+        <p>Consultar aulas realizadas e canceladas</p>
     </a>
     <a href="{{ url_for('instructor_search') }}" class="dashboard-card">
         <div class="icon">🔍</div>

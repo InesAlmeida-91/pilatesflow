@@ -133,6 +133,7 @@
         }
         .badge-success { background: #d4edda; color: #155724; }
         .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-secondary { background: #e9ecef; color: #495057; }
 
         .dashboard-grid {
             display: grid;
@@ -196,11 +197,13 @@
             {% if session['user']['type'] == 'INSTRUCTOR' %}
                 <a href="{{ url_for('instructor_dashboard') }}">Dashboard</a>
                 <a href="{{ url_for('instructor_list_classes') }}">Aulas</a>
+                <a href="{{ url_for('instructor_class_history') }}">Histórico</a>
                 <a href="{{ url_for('instructor_search') }}">Pesquisar</a>
             {% else %}
                 <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
                 <a href="{{ url_for('student_available_classes') }}">Aulas Disponíveis</a>
                 <a href="{{ url_for('student_reservations') }}">Minhas Reservas</a>
+                <a href="{{ url_for('student_reservations_history') }}">Histórico</a>
             {% endif %}
             <span style="color: #bdc3c7;">{{ session['user']['name'] }}</span>
             <a href="{{ url_for('logout') }}" class="logout">Sair</a>

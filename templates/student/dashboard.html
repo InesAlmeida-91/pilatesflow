@@ -14,7 +14,12 @@
     <a href="{{ url_for('student_reservations') }}" class="dashboard-card">
         <div class="icon">🎫</div>
         <h3>Minhas Reservas</h3>
-        <p>Consultar e gerir as suas reservas</p>
+        <p>Consultar e gerir as suas reservas ativas</p>
+    </a>
+    <a href="{{ url_for('student_reservations_history') }}" class="dashboard-card">
+        <div class="icon">🕘</div>
+        <h3>Histórico de Reservas</h3>
+        <p>Ver reservas passadas e canceladas</p>
     </a>
 </div>
 {% endblock %}
