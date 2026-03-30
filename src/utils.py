@@ -6,6 +6,16 @@ import re
 import math
 from datetime import datetime
 
+
+def parse_schedule(schedule):
+    """Converte um horário ISO ('AAAA-MM-DD HH:MM') em datetime."""
+    return datetime.strptime(schedule, "%Y-%m-%d %H:%M")
+
+
+def is_schedule_in_past(schedule):
+    """Indica se o horário da aula já passou."""
+    return parse_schedule(schedule) < datetime.now()
+
 def paginate(items, page=1, per_page=5):
     """Retorna sublista paginada e metadados."""
     try:

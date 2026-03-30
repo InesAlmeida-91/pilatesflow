@@ -1,8 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Minhas Reservas{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<h1>Minhas Reservas</h1>
+<h1>{{ page_title }}</h1>
+
+<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+    <a href="{{ url_for('student_reservations') }}" class="btn {{ 'btn-primary' if not history_mode else 'btn-secondary' }}">Reservas Ativas</a>
+    <a href="{{ url_for('student_reservations_history') }}" class="btn {{ 'btn-primary' if history_mode else 'btn-secondary' }}">Histórico</a>
+</div>
 
 {% if reservations %}
 <table>
@@ -14,7 +19,9 @@
             <th>Duração</th>
             <th>Estado</th>
             <th>Reservado em</th>
+            {% if not history_mode %}
             <th>Ação</th>
+            {% endif %}
         </tr>
     </thead>
     <tbody>
@@ -24,13 +31,15 @@
             <td>{{ r.class_name }}</td>
             <td>{{ r.schedule | format_schedule }}</td>
             <td>{{ r.duration }} min</td>
-            <td><span class="badge badge-success">{{ r.status }}</span></td>
+            <td><span class="badge badge-{{ r.status_variant }}">{{ r.display_status }}</span></td>
             <td>{{ r.reserved_at }}</td>
+            {% if not history_mode %}
             <td>
                 <form method="POST" action="{{ url_for('student_cancel_reservation', reservation_id=r.reservation_id) }}" class="inline-form" onsubmit="return confirm('Tem a certeza que deseja cancelar esta reserva?');">
                     <button type="submit" class="btn btn-danger" style="padding:6px 14px; font-size:0.85em;">Cancelar</button>
                 </form>
             </td>
+            {% endif %}
         </tr>
         {% endfor %}
     </tbody>
@@ -39,20 +48,20 @@
 {% if total_pages and total_pages > 1 %}
 <nav class="pagination" style="display:flex; justify-content:center; align-items:center; gap:8px; background:none; padding:10px 0;">
     {% if current_page > 1 %}
-        <a class="btn" href="{{ url_for('student_reservations', page=current_page-1) }}">Anterior</a>
+        <a class="btn" href="{{ url_for(page_endpoint, page=current_page-1) }}">Anterior</a>
     {% endif %}
 
     <span style="font-weight:600;">Página {{ current_page }} de {{ total_pages }}</span>
 
     {% if current_page < total_pages %}
-        <a class="btn" href="{{ url_for('student_reservations', page=current_page+1) }}">Próxima</a>
+        <a class="btn" href="{{ url_for(page_endpoint, page=current_page+1) }}">Próxima</a>
     {% endif %}
 </nav>
 {% endif %}
 
 {% else %}
 <div class="card">
-    <p>Ainda não tem reservas. <a href="{{ url_for('student_available_classes') }}">Veja as aulas disponíveis!</a></p>
+    <p>{{ empty_message }}{% if not history_mode %} <a href="{{ url_for('student_available_classes') }}">Veja as aulas disponíveis!</a>{% endif %}</p>
 </div>
 {% endif %}
 {% endblock %}

@@ -9,6 +9,39 @@ Funcionalidades das reservas:
 from datetime import date
 from src.database import load_json, save_json, get_next_id
 from src.components.student import can_reserve
+from src.utils import is_schedule_in_past
+
+
+def _is_historical_reservation(reservation, class_info):
+    if reservation["status"] == "cancelado":
+        return True
+    if class_info["status"] == "cancelado":
+        return True
+    return is_schedule_in_past(class_info["schedule"])
+
+
+def _serialize_reservation(reservation, class_info, history=False):
+    is_cancelled = reservation["status"] == "cancelado" or class_info["status"] == "cancelado"
+    if is_cancelled:
+        display_status = "Cancelada"
+        status_variant = "danger"
+    elif history:
+        display_status = "Realizada"
+        status_variant = "secondary"
+    else:
+        display_status = "Confirmada"
+        status_variant = "success"
+
+    return {
+        "reservation_id": reservation["id"],
+        "class_name": class_info["name"],
+        "schedule": class_info["schedule"],
+        "duration": class_info["duration"],
+        "status": reservation["status"],
+        "display_status": display_status,
+        "status_variant": status_variant,
+        "reserved_at": reservation["created_at"]
+    }
 
 def list_available_classes(student_id=None):
 
@@ -23,6 +56,8 @@ def list_available_classes(student_id=None):
 
     for c in classes:
         if c["status"] != "confirmado":
+            continue
+        if is_schedule_in_past(c["schedule"]):
             continue
 
         active_count = sum(
@@ -50,8 +85,8 @@ def list_available_classes(student_id=None):
 
     return sorted(available_classes, key=lambda c: c["schedule"])
 
-def list_student_reservations(student_id):
-    """Lista as reservas ativas de um aluno, incluindo nome da aula, data e status."""
+def list_student_reservations(student_id, history=False):
+    """Lista as reservas ativas ou históricas de um aluno."""
     reservations = load_json("reservations.json")
     classes = load_json("classes.json")
 
@@ -60,22 +95,20 @@ def list_student_reservations(student_id):
 
     result = []
     for res in reservations:
-        if res["student_id"] == student_id and res["status"] == "confirmado":
-            # Obtem os dados da aula associada à reserva
-            class_info = class_map.get(res["class_id"])
-            
-            if class_info:
-                """Monta a estrutura da reserva para o frontend, incluindo nome da aula, data e status."""
-                result.append({
-                    "reservation_id": res["id"],
-                    "class_name": class_info["name"],
-                    "schedule": class_info["schedule"],
-                    "duration": class_info["duration"],
-                    "status": res["status"],
-                    "reserved_at": res["created_at"]
-                })
+        if res["student_id"] != student_id:
+            continue
 
-    return sorted(result, key=lambda r: r["schedule"])
+        class_info = class_map.get(res["class_id"])
+        if not class_info:
+            continue
+
+        is_history_item = _is_historical_reservation(res, class_info)
+        if history != is_history_item:
+            continue
+
+        result.append(_serialize_reservation(res, class_info, history=history))
+
+    return sorted(result, key=lambda r: r["schedule"], reverse=history)
 
 def reserve_class(student_id, class_id):
     """

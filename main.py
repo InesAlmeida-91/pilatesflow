@@ -140,6 +140,29 @@ def instructor_list_classes():
         "instructor/list_classes.html",
         classes=classes,
         user=session["user"],
+        page_title="Minhas Aulas",
+        history_mode=False,
+        empty_message="Não tem aulas ativas. Crie uma nova aula para começar.",
+        page_endpoint="instructor_list_classes",
+        total_pages=total_pages,
+        current_page=current_page
+    )
+
+
+@app.route("/instructor/classes/history")
+@instructor_required
+def instructor_class_history():
+    page = request.args.get("page", 1, type=int)
+    classes_all = list_classes(instructor_id=session["user"]["id"], history=True)
+    classes, total_pages, current_page = paginate(classes_all, page, 5)
+    return render_template(
+        "instructor/list_classes.html",
+        classes=classes,
+        user=session["user"],
+        page_title="Histórico de Aulas",
+        history_mode=True,
+        empty_message="Ainda não existem aulas passadas ou canceladas.",
+        page_endpoint="instructor_class_history",
         total_pages=total_pages,
         current_page=current_page
     )
@@ -296,6 +319,29 @@ def student_reservations():
         "student/reservations.html",
         reservations=reservations,
         user=session["user"],
+        page_title="Minhas Reservas",
+        history_mode=False,
+        empty_message="Ainda não tem reservas ativas.",
+        page_endpoint="student_reservations",
+        total_pages=total_pages,
+        current_page=current_page
+    )
+
+
+@app.route("/student/reservations/history")
+@student_required
+def student_reservations_history():
+    page = request.args.get("page", 1, type=int)
+    reservations_all = list_student_reservations(session["user"]["id"], history=True)
+    reservations, total_pages, current_page = paginate(reservations_all, page, 5)
+    return render_template(
+        "student/reservations.html",
+        reservations=reservations,
+        user=session["user"],
+        page_title="Histórico de Reservas",
+        history_mode=True,
+        empty_message="Ainda não existem reservas passadas ou canceladas.",
+        page_endpoint="student_reservations_history",
         total_pages=total_pages,
         current_page=current_page
     )

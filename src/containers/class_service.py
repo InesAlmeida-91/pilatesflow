@@ -9,13 +9,37 @@ Funcionalidades das aulas:
 
 from datetime import date
 from src.database import load_json, save_json, get_next_id
-from src.utils import to_iso_date, validate_future_datetime
+from src.utils import is_schedule_in_past, to_iso_date, validate_future_datetime
 
-def list_classes(instructor_id=None):
-    """Lista todas as aulas. Se instructor_id for dado, filtra por instrutor."""
+def _is_historical_class(class_data):
+    return class_data["status"] == "cancelado" or is_schedule_in_past(class_data["schedule"])
+
+
+def _serialize_class(class_data, history=False):
+    serialized = {**class_data}
+    if class_data["status"] == "cancelado":
+        serialized["display_status"] = "Cancelada"
+        serialized["status_variant"] = "danger"
+    elif history:
+        serialized["display_status"] = "Realizada"
+        serialized["status_variant"] = "secondary"
+    else:
+        serialized["display_status"] = "Confirmada"
+        serialized["status_variant"] = "success"
+    return serialized
+
+
+def list_classes(instructor_id=None, history=False):
+    """Lista aulas ativas ou históricas. Se instructor_id for dado, filtra por instrutor."""
     classes = load_json("classes.json")
     if instructor_id:
         classes = [cls for cls in classes if cls["instructor_id"] == instructor_id]
+
+    if history:
+        classes = [_serialize_class(cls, history=True) for cls in classes if _is_historical_class(cls)]
+        return sorted(classes, key=lambda c: c["schedule"], reverse=True)
+
+    classes = [_serialize_class(cls) for cls in classes if not _is_historical_class(cls)]
     return sorted(classes, key=lambda c: c["schedule"])
 
 def create_class(name, schedule_date, schedule_time, duration, description, max_students, instructor_id):

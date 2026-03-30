@@ -1,9 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Minhas Aulas{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<h1>Minhas Aulas</h1>
-<a href="{{ url_for('instructor_create_class') }}" class="btn btn-success" style="margin-bottom:20px;">➕ Criar Nova Aula</a>
+<h1>{{ page_title }}</h1>
+
+<div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="{{ url_for('instructor_list_classes') }}" class="btn {{ 'btn-primary' if not history_mode else 'btn-secondary' }}">Aulas Ativas</a>
+        <a href="{{ url_for('instructor_class_history') }}" class="btn {{ 'btn-primary' if history_mode else 'btn-secondary' }}">Histórico</a>
+    </div>
+    {% if not history_mode %}
+    <a href="{{ url_for('instructor_create_class') }}" class="btn btn-success">➕ Criar Nova Aula</a>
+    {% endif %}
+</div>
 
 {% if classes %}
 <table>
@@ -26,17 +35,11 @@
             <td>{{ c.schedule | format_schedule }}</td>
             <td>{{ c.duration }} min</td>
             <td>{{ c.max_students }}</td>
-            <td>
-                {% if c.status == 'confirmado' %}
-                    <span class="badge badge-success">Confirmado</span>
-                {% else %}
-                    <span class="badge badge-danger">Cancelado</span>
-                {% endif %}
-            </td>
+            <td><span class="badge badge-{{ c.status_variant }}">{{ c.display_status }}</span></td>
             <td>
                 <div class="actions">
                     <a href="{{ url_for('instructor_class_students', class_id=c.id) }}" class="btn btn-primary" style="padding:6px 12px; font-size:0.85em;">👥 Alunos</a>
-                    {% if c.status == 'confirmado' %}
+                    {% if not history_mode %}
                         <a href="{{ url_for('instructor_edit_class', class_id=c.id) }}" class="btn btn-secondary" style="padding:6px 12px; font-size:0.85em;">✏️ Editar</a>
                         <form method="POST" action="{{ url_for('instructor_cancel_class', class_id=c.id) }}" class="inline-form" onsubmit="return confirm('Tem a certeza que deseja cancelar esta aula?');">
                             <button type="submit" class="btn btn-danger" style="padding:6px 12px; font-size:0.85em;">❌ Cancelar</button>
@@ -52,20 +55,20 @@
 {% if total_pages and total_pages > 1 %}
 <nav class="pagination" style="display:flex; justify-content:center; align-items:center; gap:8px; background:none; padding:10px 0;">
     {% if current_page > 1 %}
-        <a class="btn" href="{{ url_for('instructor_list_classes', page=current_page-1) }}">Anterior</a>
+        <a class="btn" href="{{ url_for(page_endpoint, page=current_page-1) }}">Anterior</a>
     {% endif %}
 
     <span style="font-weight:600;">Página {{ current_page }} de {{ total_pages }}</span>
 
     {% if current_page < total_pages %}
-        <a class="btn" href="{{ url_for('instructor_list_classes', page=current_page+1) }}">Próxima</a>
+        <a class="btn" href="{{ url_for(page_endpoint, page=current_page+1) }}">Próxima</a>
     {% endif %}
 </nav>
 {% endif %}
 
 {% else %}
 <div class="card">
-    <p>Ainda não tem aulas registadas. <a href="{{ url_for('instructor_create_class') }}">Crie a primeira aula!</a></p>
+    <p>{{ empty_message }}{% if not history_mode %} <a href="{{ url_for('instructor_create_class') }}">Crie a primeira aula!</a>{% endif %}</p>
 </div>
 {% endif %}
 {% endblock %}

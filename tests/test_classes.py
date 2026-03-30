@@ -9,6 +9,7 @@ import tempfile
 from datetime import datetime, timedelta
 from unittest.mock import patch
 from src.containers.class_service import create_class, list_classes, cancel_class, edit_class, get_class_by_id
+from src.database import save_json
 from src.utils import paginate
 
 
@@ -108,6 +109,51 @@ class TestClasses(unittest.TestCase):
         self.assertEqual(len(page1), 5)
         self.assertEqual(len(page2), 2)
         self.assertEqual(current_page, 1)
+
+    def test_list_classes_separates_active_and_history(self):
+        future_date = (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
+        past_date = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
+        save_json("classes.json", [
+            {
+                "id": 1,
+                "name": "Aula Ativa",
+                "schedule": f"{future_date} 09:00",
+                "duration": 60,
+                "description": "",
+                "status": "confirmado",
+                "max_students": 10,
+                "instructor_id": 1,
+                "created_at": "2025-01-01"
+            },
+            {
+                "id": 2,
+                "name": "Aula Realizada",
+                "schedule": f"{past_date} 09:00",
+                "duration": 60,
+                "description": "",
+                "status": "confirmado",
+                "max_students": 10,
+                "instructor_id": 1,
+                "created_at": "2025-01-01"
+            },
+            {
+                "id": 3,
+                "name": "Aula Cancelada",
+                "schedule": f"{future_date} 11:00",
+                "duration": 60,
+                "description": "",
+                "status": "cancelado",
+                "max_students": 10,
+                "instructor_id": 1,
+                "created_at": "2025-01-01"
+            }
+        ])
+
+        active_classes = list_classes(instructor_id=1)
+        history_classes = list_classes(instructor_id=1, history=True)
+
+        self.assertEqual([c["name"] for c in active_classes], ["Aula Ativa"])
+        self.assertEqual([c["display_status"] for c in history_classes], ["Cancelada", "Realizada"])
 
 
 if __name__ == "__main__":
