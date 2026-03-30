@@ -6,6 +6,9 @@
 <p><strong>Horário:</strong> {{ class_data.schedule | format_schedule }} | <strong>Máx. Alunos:</strong> {{ class_data.max_students }} | <strong>Inscritos:</strong> {{ students|length }}</p>
 
 {% if students %}
+<div style="margin: 15px 0;">
+    <a href="{{ url_for('instructor_export_students', class_id=class_data.id) }}" class="btn btn-success">📥 Exportar CSV</a>
+</div>
 <table>
     <thead>
         <tr>

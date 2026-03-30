@@ -205,7 +205,7 @@
                 <a href="{{ url_for('student_reservations') }}">Minhas Reservas</a>
                 <a href="{{ url_for('student_reservations_history') }}">Histórico</a>
             {% endif %}
-            <span style="color: #bdc3c7;">{{ session['user']['name'] }}</span>
+            <a href="{{ url_for('profile') }}" style="color: #bdc3c7;">👤 {{ session['user']['name'] }}</a>
             <a href="{{ url_for('logout') }}" class="logout">Sair</a>
         </div>
     </nav>

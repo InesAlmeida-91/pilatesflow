@@ -221,3 +221,40 @@ def search_reservations(query):
                 })
 
     return sorted(results, key=lambda x: x["class_schedule"], reverse=True)
+
+
+def get_instructor_stats(instructor_id):
+    """
+    Retorna estatísticas do instrutor:
+    - total_students: total de alunos inscritos nas aulas ativas
+    - active_classes: número de aulas ativas
+    - occupancy_rate: taxa de ocupação média (%)
+    """
+    classes = load_json("classes.json")
+    reservations = load_json("reservations.json")
+
+    active_classes = [
+        c for c in classes
+        if c["instructor_id"] == instructor_id
+        and c["status"] != "cancelado"
+        and not is_schedule_in_past(c["schedule"])
+    ]
+
+    total_students = 0
+    total_capacity = 0
+
+    for cls in active_classes:
+        enrolled = sum(
+            1 for r in reservations
+            if r["class_id"] == cls["id"] and r["status"] == "confirmado"
+        )
+        total_students += enrolled
+        total_capacity += cls["max_students"]
+
+    occupancy_rate = round((total_students / total_capacity * 100), 1) if total_capacity > 0 else 0
+
+    return {
+        "total_students": total_students,
+        "active_classes": len(active_classes),
+        "occupancy_rate": occupancy_rate
+    }

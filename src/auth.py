@@ -56,3 +56,39 @@ def register(name, email, password):
     save_json("users.json", users)
 
     return True, f"Registo efetuado com sucesso! Bem-vindo(a), {new_user['name']}."
+
+
+def update_profile(user_id, name, email, current_password, new_password):
+    """
+    Atualiza o perfil de um utilizador (nome, email e/ou password).
+    Retorna (sucesso: bool, mensagem: str, utilizador_atualizado: dict|None).
+    """
+    users = load_json("users.json")
+    user = next((u for u in users if u["id"] == user_id), None)
+
+    if not user:
+        return False, "Utilizador não encontrado.", None
+
+    if name and name.strip():
+        user["name"] = name.strip()
+
+    if email and email.strip():
+        if not validate_email(email):
+            return False, "Formato de e-mail inválido.", None
+        existing = next((u for u in users if u["email"] == email.strip() and u["id"] != user_id), None)
+        if existing:
+            return False, "Já existe outro utilizador com este e-mail.", None
+        user["email"] = email.strip()
+
+    if new_password:
+        if not current_password:
+            return False, "Introduza a password atual para definir uma nova.", None
+        if not check_password_hash(user["password"], current_password):
+            return False, "A password atual está incorreta.", None
+        valid, msg = validate_password(new_password)
+        if not valid:
+            return False, msg, None
+        user["password"] = generate_password_hash(new_password)
+
+    save_json("users.json", users)
+    return True, "Perfil atualizado com sucesso.", user

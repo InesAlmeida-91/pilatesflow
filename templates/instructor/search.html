@@ -5,6 +5,7 @@
 <h1>Pesquisar Reservas</h1>
 <div class="card">
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
             <label for="query">Pesquisar por nome ou e-mail do aluno</label>
             <div style="display:flex; gap:10px;">

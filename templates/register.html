@@ -5,6 +5,7 @@
 <div class="auth-card">
     <h1>📝 Registo de Aluno</h1>
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
             <label for="name">Nome completo</label>
             <input type="text" id="name" name="name" required placeholder="O seu nome" value="{{ name }}">

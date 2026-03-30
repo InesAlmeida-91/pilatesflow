@@ -6,6 +6,25 @@
 <p>Bem-vindo(a), <strong>{{ user.name }}</strong>!</p>
 
 <div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="icon">👥</div>
+        <h3>{{ stats.total_students }}</h3>
+        <p>Alunos inscritos</p>
+    </div>
+    <div class="dashboard-card">
+        <div class="icon">📋</div>
+        <h3>{{ stats.active_classes }}</h3>
+        <p>Aulas ativas</p>
+    </div>
+    <div class="dashboard-card">
+        <div class="icon">📊</div>
+        <h3>{{ stats.occupancy_rate }}%</h3>
+        <p>Taxa de ocupação</p>
+    </div>
+</div>
+
+<h2 style="margin-top: 30px;">Acesso Rápido</h2>
+<div class="dashboard-grid">
     <a href="{{ url_for('instructor_list_classes') }}" class="dashboard-card">
         <div class="icon">📋</div>
         <h3>Listar Aulas</h3>

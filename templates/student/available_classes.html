@@ -31,6 +31,7 @@
                     <button type="button" class="btn btn-secondary" style="padding:6px 14px; font-size:0.85em;" disabled>Reservado</button>
                 {% else %}
                     <form method="POST" action="{{ url_for('student_reserve', class_id=c.id) }}" class="inline-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-success" style="padding:6px 14px; font-size:0.85em;">Reservar</button>
                     </form>
                 {% endif %}

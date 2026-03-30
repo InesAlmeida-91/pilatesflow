@@ -5,6 +5,7 @@
 <h1>Editar Aula: {{ class_data.name }}</h1>
 <div class="card">
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
             <label for="name">Nome da Aula</label>
             <input type="text" id="name" name="name" value="{{ class_data.name }}">

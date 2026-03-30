@@ -9,7 +9,7 @@
   },
   {
     "id": 2,
-    "name": "Aluno 1",
+    "name": "Student 1",
     "email": "student@pilates.com",
     "password": "scrypt:32768:8:1$7ydmSHSqMNFUvtWZ$ff5efa6a4ee99d65b1c26eb7ab96e590b2288b0f47f5e6a4a7535faaa656883f545e2350279b529408e1cd210b9a3f7e54106cd099c747596d61fd6c6b77514e",
     "type": "STUDENT",

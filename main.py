@@ -3,11 +3,17 @@ main.py - Ponto de entrada da aplicação Flask.
 Sistema de gestão de estúdio de Pilates.
 """
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from src.auth import login, register
+import os
+import io
+import csv
+from dotenv import load_dotenv
+from flask import Flask, render_template, request, redirect, url_for, session, flash, Response
+from flask_wtf.csrf import CSRFProtect
+from src.auth import login, register, update_profile
 from src.containers.class_service import (
     list_classes, create_class, edit_class, cancel_class,
-    get_class_by_id, get_enrolled_students, search_reservations
+    get_class_by_id, get_enrolled_students, search_reservations,
+    get_instructor_stats
 )
 from src.containers.reservation_service import (
     list_available_classes, reserve_class, cancel_reservation,
@@ -15,8 +21,11 @@ from src.containers.reservation_service import (
 )
 from src.utils import validate_datetime, from_iso_date, paginate
 
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = "pilates_studio_secret_key_2025"
+app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key")
+csrf = CSRFProtect(app)
 
 @app.template_filter('format_schedule')
 def format_schedule_filter(schedule):
@@ -127,7 +136,8 @@ def logout():
 @app.route("/instructor")
 @instructor_required
 def instructor_dashboard():
-    return render_template("instructor/dashboard.html", user=session["user"])
+    stats = get_instructor_stats(session["user"]["id"])
+    return render_template("instructor/dashboard.html", user=session["user"], stats=stats)
 
 
 @app.route("/instructor/classes")
@@ -261,6 +271,30 @@ def instructor_class_students(class_id):
     return render_template("instructor/class_students.html", class_data=class_data, students=students, user=session["user"])
 
 
+@app.route("/instructor/classes/<int:class_id>/students/export")
+@instructor_required
+def instructor_export_students(class_id):
+    class_data = get_class_by_id(class_id)
+    if not class_data:
+        flash("Aula não encontrada.", "error")
+        return redirect(url_for("instructor_list_classes"))
+
+    students = get_enrolled_students(class_id)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Nome", "E-mail", "Data da Reserva"])
+    for s in students:
+        writer.writerow([s["id"], s["name"], s["email"], s["reservation_date"]])
+
+    filename = f"alunos_{class_data['name'].replace(' ', '_')}_{class_id}.csv"
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
 @app.route("/instructor/search", methods=["GET", "POST"])
 @instructor_required
 def instructor_search():
@@ -353,6 +387,29 @@ def student_cancel_reservation(reservation_id):
     success, msg = cancel_reservation(reservation_id, session["user"]["id"])
     flash(msg, "success" if success else "error")
     return redirect(url_for("student_reservations"))
+
+
+# ═══════════════════════════════════════
+#  PERFIL DE UTILIZADOR
+# ═══════════════════════════════════════
+
+@app.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    if request.method == "POST":
+        name = request.form.get("name", "")
+        email = request.form.get("email", "")
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+
+        success, msg, updated_user = update_profile(
+            session["user"]["id"], name, email, current_password, new_password
+        )
+        flash(msg, "success" if success else "error")
+        if success:
+            session["user"] = updated_user
+
+    return render_template("profile.html", user=session["user"])
 
 
 # ═══════════════════════════════════════
