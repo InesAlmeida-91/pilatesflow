@@ -156,13 +156,37 @@ def forgot_password():
                     "Recuperação de Password - Estúdio Pilates",
                     recipients=[email]
                 )
+
+                # Plain text version (fallback)
+                msg.body = f"""
+                Olá {user['name']},
+
+                Para redefinir a sua password, aceda ao seguinte link:
+                {reset_url}
+
+                Este link é válido por 1 hora.
+                Se não solicitou esta recuperação, ignore este e-mail.
+                """
+
+                # HTML version (with inline styles for compatibility)
                 msg.html = f"""
-                <h2>Recuperação de Password</h2>
-                <p>Olá {user['name']},</p>
-                <p>Clique no link abaixo para redefinir a sua password:</p>
-                <p><a href="{reset_url}">{reset_url}</a></p>
-                <p>Este link é válido por 1 hora.</p>
-                <p>Se não solicitou esta recuperação, ignore este e-mail.</p>
+                <div style="font-family: sans-serif; color: #333;">
+                    <h2 style="color: #2c3e50;">Recuperação de Password</h2>
+                    <p>Olá <strong>{user['name']}</strong>,</p>
+                    <p>Clique no link abaixo para redefinir a sua password:</p>
+                    <p style="margin: 20px 0;">
+                        <a href="{reset_url}" 
+                        style="background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        Redefinir Password
+                        </a>
+                    </p>
+                    <p style="font-size: 12px; color: #7f8c8d;">
+                        Se o botão não funcionar, copie este link: <br>
+                        {reset_url}
+                    </p>
+                    <hr style="border: 0; border-top: 1px solid #eee;">
+                    <p style="font-size: 12px;">Este link é válido por 1 hora.</p>
+                </div>
                 """
                 mail.send(msg)
             except Exception:
