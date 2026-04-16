@@ -27,7 +27,7 @@
     "id": 4,
     "name": "Bernardo Lagos",
     "email": "lagostest123@hotmail.com",
-    "password": "scrypt:32768:8:1$DCpFyW8PCn0VtPjD$371c40fd7e2f1b7ffd30560a26085ca9d9728d8e542aaa69099692154c5c174f5937703449273c7e69568af6eac92842e93fe1f66284cf2faffb3e3265d947e9",
+    "password": "scrypt:32768:8:1$GYyi1m0NIxo2zCPa$6feba91520957df65d25c6247f37053286c4efbb7a9df64bde280df7951de1d53b15308f6c7452e2c56477cbe8bb83e4cc39ecc87c4f9176df181662d3d13160",
     "type": "STUDENT",
     "created_at": "2026-03-30"
   }

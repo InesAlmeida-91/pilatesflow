@@ -6,5 +6,13 @@
     "class_id": 12,
     "read": true,
     "created_at": "2026-03-30"
+  },
+  {
+    "id": 2,
+    "student_id": 4,
+    "message": "Abriu uma vaga na aula 'Pilates iniciante'! Reserve já o seu lugar.",
+    "class_id": 13,
+    "read": false,
+    "created_at": "2026-04-16"
   }
 ]
